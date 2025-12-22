@@ -4,47 +4,75 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { z } from "zod";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const registerSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
+  email: z.string().email("Email inválido").max(255),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  confirmPassword: z.string(),
+  role: z.enum(["admin", "recepcionista", "profissional"]),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "As senhas não coincidem",
+  path: ["confirmPassword"],
+});
+
+const roleLabels: Record<AppRole, string> = {
+  admin: "Administrador",
+  recepcionista: "Recepcionista",
+  profissional: "Profissional de Saúde",
+};
 
 export default function Cadastro() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState<AppRole>("profissional");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!name || !email || !password || !confirmPassword) {
-      toast.error("Por favor, preencha todos os campos");
-      return;
-    }
 
-    if (password !== confirmPassword) {
-      toast.error("As senhas não coincidem");
-      return;
-    }
+    const validation = registerSchema.safeParse({
+      name,
+      email,
+      password,
+      confirmPassword,
+      role,
+    });
 
-    if (password.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
-      const success = await register(name, email, password);
-      if (success) {
+      const { error } = await signUp(email, password, name, role);
+      if (error) {
+        if (error.message.includes("already registered")) {
+          toast.error("Este email já está cadastrado");
+        } else {
+          toast.error(error.message);
+        }
+      } else {
         toast.success("Conta criada com sucesso!");
         navigate("/dashboard");
-      } else {
-        toast.error("Este email já está em uso");
       }
     } catch {
       toast.error("Erro ao criar conta. Tente novamente.");
@@ -134,6 +162,22 @@ export default function Cadastro() {
                     autoComplete="email"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="role">Tipo de usuário</Label>
+                <Select value={role} onValueChange={(value) => setRole(value as AppRole)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione seu tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(roleLabels) as AppRole[]).map((roleKey) => (
+                      <SelectItem key={roleKey} value={roleKey}>
+                        {roleLabels[roleKey]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
