@@ -2,18 +2,33 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, X, Shield, User, Stethoscope } from "lucide-react";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+
+const roleIcons = {
+  admin: Shield,
+  recepcionista: User,
+  profissional: Stethoscope,
+};
+
+const roleLabels = {
+  admin: "Admin",
+  recepcionista: "Recepcionista",
+  profissional: "Profissional",
+};
 
 export function Header() {
-  const { user, logout } = useAuth();
+  const { user, profile, role, signOut } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate("/");
   };
+
+  const RoleIcon = role ? roleIcons[role] : User;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
@@ -26,9 +41,17 @@ export function Header() {
         <nav className="hidden md:flex items-center gap-4">
           {user ? (
             <>
-              <span className="text-sm text-muted-foreground">
-                Olá, <span className="font-medium text-foreground">{user.name}</span>
-              </span>
+              <div className="flex items-center gap-3">
+                {role && (
+                  <Badge variant="secondary" className="flex items-center gap-1.5">
+                    <RoleIcon className="h-3 w-3" />
+                    {roleLabels[role]}
+                  </Badge>
+                )}
+                <span className="text-sm text-muted-foreground">
+                  {profile?.full_name || user.email}
+                </span>
+              </div>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
@@ -65,9 +88,17 @@ export function Header() {
           <nav className="flex flex-col gap-3">
             {user ? (
               <>
-                <span className="text-sm text-muted-foreground px-2">
-                  Olá, <span className="font-medium text-foreground">{user.name}</span>
-                </span>
+                <div className="flex items-center gap-2 px-2 pb-3 border-b border-border">
+                  {role && (
+                    <Badge variant="secondary" className="flex items-center gap-1.5">
+                      <RoleIcon className="h-3 w-3" />
+                      {roleLabels[role]}
+                    </Badge>
+                  )}
+                  <span className="text-sm text-muted-foreground">
+                    {profile?.full_name || user.email}
+                  </span>
+                </div>
                 <Button variant="ghost" onClick={handleLogout} className="justify-start">
                   <LogOut className="h-4 w-4 mr-2" />
                   Sair
