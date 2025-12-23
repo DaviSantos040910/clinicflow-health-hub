@@ -14,6 +14,7 @@ import AcessoNegado from "./pages/AcessoNegado";
 import Dashboard from "./pages/Dashboard";
 import Pacientes from "./pages/Pacientes";
 import Profissionais from "./pages/Profissionais";
+import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/agenda"
+              element={
+                <ProtectedRoute>
+                  <Agenda />
                 </ProtectedRoute>
               }
             />

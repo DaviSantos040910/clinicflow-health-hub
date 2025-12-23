@@ -42,6 +42,9 @@ export function Header() {
           {user ? (
             <>
               <Button variant="ghost" size="sm" asChild>
+                <Link to="/agenda">Agenda</Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
                 <Link to="/pacientes">Pacientes</Link>
               </Button>
               <Button variant="ghost" size="sm" asChild>
@@ -105,6 +108,9 @@ export function Header() {
                     {profile?.full_name || user.email}
                   </span>
                 </div>
+                <Button variant="ghost" asChild className="justify-start">
+                  <Link to="/agenda">Agenda</Link>
+                </Button>
                 <Button variant="ghost" asChild className="justify-start">
                   <Link to="/pacientes">Pacientes</Link>
                 </Button>
