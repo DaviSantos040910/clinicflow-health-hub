@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 
 const stats = [
   { 
-    label: "Pacientes hoje", 
+    label: "Consultas do dia",
     value: "12", 
     change: "+3 vs ontem",
     icon: Users,
@@ -26,9 +26,9 @@ const stats = [
     roles: ["admin", "recepcionista", "profissional"] as AppRole[]
   },
   { 
-    label: "Consultas agendadas", 
-    value: "28", 
-    change: "Esta semana",
+    label: "Total de consultas",
+    value: "128",
+    change: "Este mês",
     icon: Calendar,
     color: "text-secondary",
     roles: ["admin", "recepcionista", "profissional"] as AppRole[]

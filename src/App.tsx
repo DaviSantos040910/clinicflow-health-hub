@@ -13,6 +13,7 @@ import RedefinirSenha from "./pages/RedefinirSenha";
 import AcessoNegado from "./pages/AcessoNegado";
 import Dashboard from "./pages/Dashboard";
 import Pacientes from "./pages/Pacientes";
+import Profissionais from "./pages/Profissionais";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Pacientes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profissionais"
+              element={
+                <ProtectedRoute>
+                  <Profissionais />
                 </ProtectedRoute>
               }
             />

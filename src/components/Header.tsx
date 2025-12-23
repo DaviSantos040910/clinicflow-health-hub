@@ -44,6 +44,9 @@ export function Header() {
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/pacientes">Pacientes</Link>
               </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/profissionais">Profissionais</Link>
+              </Button>
               <div className="flex items-center gap-3">
                 {role && (
                   <Badge variant="secondary" className="flex items-center gap-1.5">
@@ -104,6 +107,9 @@ export function Header() {
                 </div>
                 <Button variant="ghost" asChild className="justify-start">
                   <Link to="/pacientes">Pacientes</Link>
+                </Button>
+                <Button variant="ghost" asChild className="justify-start">
+                  <Link to="/profissionais">Profissionais</Link>
                 </Button>
                 <Button variant="ghost" onClick={handleLogout} className="justify-start">
                   <LogOut className="h-4 w-4 mr-2" />

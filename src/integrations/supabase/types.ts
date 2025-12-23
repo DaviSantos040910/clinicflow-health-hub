@@ -41,6 +41,39 @@ export type Database = {
         }
         Relationships: []
       }
+      professionals: {
+        Row: {
+          id: string
+          created_at: string
+          name: string
+          specialty: string
+          registration_number: string | null
+          consultation_fee: number | null
+          schedule: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          name: string
+          specialty: string
+          registration_number?: string | null
+          consultation_fee?: number | null
+          schedule?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          name?: string
+          specialty?: string
+          registration_number?: string | null
+          consultation_fee?: number | null
+          schedule?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       patients: {
         Row: {
           id: string
