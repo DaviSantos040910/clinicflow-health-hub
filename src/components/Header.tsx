@@ -50,6 +50,11 @@ export function Header() {
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/profissionais">Profissionais</Link>
               </Button>
+              {role === 'admin' && (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/financeiro">Financeiro</Link>
+                </Button>
+              )}
               <div className="flex items-center gap-3">
                 {role && (
                   <Badge variant="secondary" className="flex items-center gap-1.5">
@@ -117,6 +122,11 @@ export function Header() {
                 <Button variant="ghost" asChild className="justify-start">
                   <Link to="/profissionais">Profissionais</Link>
                 </Button>
+                {role === 'admin' && (
+                  <Button variant="ghost" asChild className="justify-start">
+                    <Link to="/financeiro">Financeiro</Link>
+                  </Button>
+                )}
                 <Button variant="ghost" onClick={handleLogout} className="justify-start">
                   <LogOut className="h-4 w-4 mr-2" />
                   Sair
