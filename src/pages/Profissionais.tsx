@@ -20,10 +20,12 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Pencil, Trash2, Loader2, Calendar } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Loader2, Calendar, Stethoscope } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Json } from "@/integrations/supabase/types";
+import { TableSkeleton } from "@/components/TableSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 type ScheduleDay = {
   enabled: boolean;
@@ -311,18 +313,23 @@ export default function Profissionais() {
                 </TableHeader>
                 <TableBody>
                     {loading ? (
-                        <TableRow>
-                            <TableCell colSpan={5} className="h-24 text-center">
-                                <div className="flex justify-center items-center gap-2">
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Carregando...
-                                </div>
-                            </TableCell>
-                        </TableRow>
+                        <TableSkeleton columns={5} rows={5} />
                     ) : filteredProfessionals.length === 0 ? (
                         <TableRow>
-                             <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                Nenhum profissional encontrado.
+                             <TableCell colSpan={5} className="h-64">
+                                <EmptyState
+                                    icon={Stethoscope}
+                                    title="Nenhum profissional encontrado"
+                                    description={searchTerm ? "Tente buscar com outros termos." : "Cadastre o primeiro profissional."}
+                                    action={
+                                        !searchTerm && (
+                                            <Button onClick={openNewDialog} variant="outline" className="mt-2">
+                                                <Plus className="h-4 w-4 mr-2" />
+                                                Novo Profissional
+                                            </Button>
+                                        )
+                                    }
+                                />
                             </TableCell>
                         </TableRow>
                     ) : (

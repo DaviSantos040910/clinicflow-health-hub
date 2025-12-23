@@ -205,6 +205,7 @@ export default function Agenda() {
                 onViewChange={setView}
                 onSelectSlot={handleSelectSlot}
                 onSelectAppointment={handleSelectAppointment}
+                loading={loading}
             />
         </div>
       </main>

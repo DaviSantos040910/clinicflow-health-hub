@@ -1,6 +1,6 @@
 import { format, startOfWeek, addDays, isSameDay, parseISO, isSameWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppointmentData } from "./AppointmentModal";
 import { EnrichedAppointment } from "@/pages/Agenda";
@@ -14,6 +14,7 @@ interface CalendarViewProps {
   onViewChange: (view: "day" | "week") => void;
   onSelectSlot: (date: Date, time: string) => void;
   onSelectAppointment: (appointment: AppointmentData) => void;
+  loading?: boolean;
 }
 
 const HOURS = Array.from({ length: 11 }, (_, i) => i + 8); // 8:00 to 18:00
@@ -26,6 +27,7 @@ export function CalendarView({
   onViewChange,
   onSelectSlot,
   onSelectAppointment,
+  loading = false,
 }: CalendarViewProps) {
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday start
@@ -91,7 +93,15 @@ export function CalendarView({
       </div>
 
       {/* Calendar Grid */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto relative">
+        {loading && (
+          <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-50 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground font-medium">Carregando agenda...</p>
+            </div>
+          </div>
+        )}
         <div className="flex flex-col min-w-[800px]">
           {/* Header Row (Days) */}
           <div className="flex border-b sticky top-0 bg-card z-10">

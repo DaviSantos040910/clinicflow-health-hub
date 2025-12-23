@@ -17,11 +17,13 @@ import { EnrichedPayment, Payment } from "@/types/financeiro";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { TableSkeleton } from "@/components/TableSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 export default function Financeiro() {
   const [payments, setPayments] = useState<EnrichedPayment[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Stats
   const totalRevenue = payments.reduce((acc, p) => p.status === 'pago' ? acc + p.amount : acc, 0);
@@ -33,35 +35,38 @@ export default function Financeiro() {
   useEffect(() => {
     // Initial Mock Data Load
     // In a real scenario, this would fetch from Supabase 'payments' table
-    setPayments([
-        {
-            id: "1",
-            appointment_id: "1",
-            amount: 350.00,
-            method: "cartao",
-            status: "pago",
-            date: "2024-03-20",
-            patient_name: "Maria Silva"
-        },
-        {
-            id: "2",
-            appointment_id: "2",
-            amount: 400.00,
-            method: "pix",
-            status: "pago",
-            date: "2024-03-21",
-            patient_name: "João Santos"
-        },
-        {
-            id: "3",
-            appointment_id: "3",
-            amount: 250.00,
-            method: "dinheiro",
-            status: "pendente",
-            date: "2024-03-22",
-            patient_name: "Ana Oliveira"
-        }
-    ]);
+    setTimeout(() => {
+        setPayments([
+            {
+                id: "1",
+                appointment_id: "1",
+                amount: 350.00,
+                method: "cartao",
+                status: "pago",
+                date: "2024-03-20",
+                patient_name: "Maria Silva"
+            },
+            {
+                id: "2",
+                appointment_id: "2",
+                amount: 400.00,
+                method: "pix",
+                status: "pago",
+                date: "2024-03-21",
+                patient_name: "João Santos"
+            },
+            {
+                id: "3",
+                appointment_id: "3",
+                amount: 250.00,
+                method: "dinheiro",
+                status: "pendente",
+                date: "2024-03-22",
+                patient_name: "Ana Oliveira"
+            }
+        ]);
+        setLoading(false);
+    }, 1000);
   }, []);
 
   const handleSavePayment = async (data: Omit<Payment, "id" | "created_at">) => {
@@ -171,10 +176,22 @@ export default function Financeiro() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {payments.length === 0 ? (
+                    {loading ? (
+                        <TableSkeleton columns={5} rows={3} />
+                    ) : payments.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                Nenhum pagamento registrado.
+                            <TableCell colSpan={5} className="h-64">
+                                <EmptyState
+                                    icon={DollarSign}
+                                    title="Nenhum pagamento registrado"
+                                    description="Registre o primeiro pagamento para começar a acompanhar o financeiro."
+                                    action={
+                                        <Button onClick={() => setIsModalOpen(true)} variant="outline" className="mt-2">
+                                            <Plus className="h-4 w-4 mr-2" />
+                                            Registrar Pagamento
+                                        </Button>
+                                    }
+                                />
                             </TableCell>
                         </TableRow>
                     ) : (

@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/EmptyState";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -101,18 +103,22 @@ export default function Dashboard() {
 
         // Fetch Total Appointments this month
         const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+        const nextMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString();
+
         const { count: monthCount } = await supabase
              .from("appointments")
              .select("*", { count: "exact", head: true })
-             .gte("date_time", startOfMonth);
+             .gte("date_time", startOfMonth)
+             .lt("date_time", nextMonth);
 
         // Fetch Upcoming Appointments (limit 5)
+        // Note: We might not have the foreign key for professionals yet,
+        // so we'll fetch basic data and patients for now to avoid join errors
         const { data: upcoming } = await supabase
             .from("appointments")
             .select(`
                 *,
-                patient:patients(name),
-                professional:professionals(name)
+                patient:patients(name)
             `)
             .gte("date_time", new Date().toISOString())
             .order("date_time", { ascending: true })
@@ -231,7 +237,13 @@ export default function Dashboard() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="text-2xl font-display font-bold mt-1">{stat.value}</p>
+                  <div className="mt-1">
+                    {loading ? (
+                      <Skeleton className="h-8 w-24" />
+                    ) : (
+                      <p className="text-2xl font-display font-bold">{stat.value}</p>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
                 </div>
                 <div className={`p-3 rounded-lg bg-accent ${stat.color}`}>
@@ -259,8 +271,26 @@ export default function Dashboard() {
             </div>
             
             <div className="space-y-4">
-              {upcomingAppointments.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">Nenhuma consulta próxima.</p>
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-lg bg-muted/50">
+                    <Skeleton className="h-12 w-12 rounded-lg" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                    <div className="text-right space-y-2">
+                      <Skeleton className="h-4 w-16 ml-auto" />
+                      <Skeleton className="h-5 w-20 ml-auto rounded-full" />
+                    </div>
+                  </div>
+                ))
+              ) : upcomingAppointments.length === 0 ? (
+                <EmptyState
+                  title="Nenhuma consulta próxima"
+                  description="Não há consultas agendadas para as próximas horas."
+                  icon={Calendar}
+                />
               ) : (
                 upcomingAppointments.map((appointment, index) => (
                     <div

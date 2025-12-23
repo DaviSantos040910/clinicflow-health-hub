@@ -28,10 +28,12 @@ import {
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Pencil, Trash2, History, Loader2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, History, Loader2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { TableSkeleton } from "@/components/TableSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 type Patient = {
   id: string;
@@ -268,18 +270,23 @@ export default function Pacientes() {
                 </TableHeader>
                 <TableBody>
                     {loading ? (
-                        <TableRow>
-                            <TableCell colSpan={4} className="h-24 text-center">
-                                <div className="flex justify-center items-center gap-2">
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Carregando...
-                                </div>
-                            </TableCell>
-                        </TableRow>
+                        <TableSkeleton columns={4} rows={5} />
                     ) : filteredPatients.length === 0 ? (
                         <TableRow>
-                             <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                                Nenhum paciente encontrado.
+                             <TableCell colSpan={4} className="h-64">
+                                <EmptyState
+                                    icon={Users}
+                                    title="Nenhum paciente encontrado"
+                                    description={searchTerm ? "Tente buscar com outros termos." : "Cadastre o primeiro paciente para começar."}
+                                    action={
+                                        !searchTerm && (
+                                            <Button onClick={openNewPatientDialog} variant="outline" className="mt-2">
+                                                <Plus className="h-4 w-4 mr-2" />
+                                                Novo Paciente
+                                            </Button>
+                                        )
+                                    }
+                                />
                             </TableCell>
                         </TableRow>
                     ) : (
