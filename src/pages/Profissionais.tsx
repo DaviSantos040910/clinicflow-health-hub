@@ -79,10 +79,17 @@ export default function Profissionais() {
 
   const fetchProfessionals = async () => {
     try {
-      const { data, error } = await supabase
+      // Add timeout to force mock data if backend is unreachable
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), 2000)
+      );
+
+      const supabasePromise = supabase
         .from("professionals")
         .select("*")
         .order("name");
+
+      const { data, error } = await Promise.race([supabasePromise, timeoutPromise]) as { data: any[]; error: any };
 
       if (error) throw error;
 
