@@ -12,6 +12,7 @@ import EsqueciSenha from "./pages/EsqueciSenha";
 import RedefinirSenha from "./pages/RedefinirSenha";
 import AcessoNegado from "./pages/AcessoNegado";
 import Dashboard from "./pages/Dashboard";
+import Pacientes from "./pages/Pacientes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pacientes"
+              element={
+                <ProtectedRoute>
+                  <Pacientes />
                 </ProtectedRoute>
               }
             />

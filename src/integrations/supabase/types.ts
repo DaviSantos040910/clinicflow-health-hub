@@ -41,6 +41,76 @@ export type Database = {
         }
         Relationships: []
       }
+      patients: {
+        Row: {
+          id: string
+          created_at: string
+          name: string
+          phone: string | null
+          email: string | null
+          birth_date: string | null
+          observations: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          name: string
+          phone?: string | null
+          email?: string | null
+          birth_date?: string | null
+          observations?: string | null
+          user_id?: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          name?: string
+          phone?: string | null
+          email?: string | null
+          birth_date?: string | null
+          observations?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      appointments: {
+        Row: {
+          id: string
+          created_at: string
+          patient_id: string
+          date_time: string
+          status: string
+          notes: string | null
+          professional_id: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          patient_id: string
+          date_time: string
+          status: string
+          notes?: string | null
+          professional_id?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          patient_id?: string
+          date_time?: string
+          status?: string
+          notes?: string | null
+          professional_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
