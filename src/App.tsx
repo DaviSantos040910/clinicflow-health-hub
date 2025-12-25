@@ -18,6 +18,8 @@ import Profissionais from "./pages/Profissionais";
 import Agenda from "./pages/Agenda";
 import Financeiro from "./pages/Financeiro";
 import NotFound from "./pages/NotFound";
+import TenantLogin from "./pages/TenantLogin";
+import NewClinic from "./pages/NewClinic";
 
 const queryClient = new QueryClient();
 
@@ -30,12 +32,19 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
+              {/* Public Global Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/cadastro" element={<Cadastro />} />
+              <Route path="/nova-clinica" element={<NewClinic />} />
               <Route path="/esqueci-senha" element={<EsqueciSenha />} />
               <Route path="/redefinir-senha" element={<RedefinirSenha />} />
               <Route path="/acesso-negado" element={<AcessoNegado />} />
+
+              {/* Tenant Login Portal */}
+              <Route path="/portal/:slug" element={<TenantLogin />} />
+
+              {/* Protected Routes (Dashboard) */}
               <Route
                 path="/dashboard"
                 element={
