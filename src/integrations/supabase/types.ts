@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      organizations: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          logo_url: string | null
+          primary_color: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          logo_url?: string | null
+          primary_color?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -22,6 +49,8 @@ export type Database = {
           full_name: string
           id: string
           updated_at: string
+          organization_id: string | null
+          role: Database["public"]["Enums"]["organization_role"] | null
         }
         Insert: {
           avatar_url?: string | null
@@ -30,6 +59,8 @@ export type Database = {
           full_name: string
           id: string
           updated_at?: string
+          organization_id?: string | null
+          role?: Database["public"]["Enums"]["organization_role"] | null
         }
         Update: {
           avatar_url?: string | null
@@ -38,8 +69,17 @@ export type Database = {
           full_name?: string
           id?: string
           updated_at?: string
+          organization_id?: string | null
+          role?: Database["public"]["Enums"]["organization_role"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       professionals: {
         Row: {
@@ -51,6 +91,7 @@ export type Database = {
           consultation_fee: number | null
           schedule: Json | null
           user_id: string | null
+          organization_id: string
         }
         Insert: {
           id?: string
@@ -61,6 +102,7 @@ export type Database = {
           consultation_fee?: number | null
           schedule?: Json | null
           user_id?: string | null
+          organization_id?: string
         }
         Update: {
           id?: string
@@ -71,8 +113,16 @@ export type Database = {
           consultation_fee?: number | null
           schedule?: Json | null
           user_id?: string | null
+          organization_id?: string
         }
-        Relationships: []
+        Relationships: [
+           {
+            foreignKeyName: "professionals_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       patients: {
         Row: {
@@ -84,6 +134,7 @@ export type Database = {
           birth_date: string | null
           observations: string | null
           user_id: string
+          organization_id: string
         }
         Insert: {
           id?: string
@@ -94,6 +145,7 @@ export type Database = {
           birth_date?: string | null
           observations?: string | null
           user_id?: string
+          organization_id?: string
         }
         Update: {
           id?: string
@@ -104,8 +156,16 @@ export type Database = {
           birth_date?: string | null
           observations?: string | null
           user_id?: string
+          organization_id?: string
         }
-        Relationships: []
+        Relationships: [
+           {
+            foreignKeyName: "patients_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       appointments: {
         Row: {
@@ -116,6 +176,7 @@ export type Database = {
           status: string
           notes: string | null
           professional_id: string | null
+          organization_id: string
         }
         Insert: {
           id?: string
@@ -125,6 +186,7 @@ export type Database = {
           status: string
           notes?: string | null
           professional_id?: string | null
+          organization_id?: string
         }
         Update: {
           id?: string
@@ -134,12 +196,19 @@ export type Database = {
           status?: string
           notes?: string | null
           professional_id?: string | null
+          organization_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "appointments_patient_id_fkey"
             columns: ["patient_id"]
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           }
         ]
@@ -184,6 +253,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "recepcionista" | "profissional"
+      organization_role: "owner" | "admin" | "doctor" | "receptionist"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -312,6 +382,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "recepcionista", "profissional"],
+      organization_role: ["owner", "admin", "doctor", "receptionist"],
     },
   },
 } as const
