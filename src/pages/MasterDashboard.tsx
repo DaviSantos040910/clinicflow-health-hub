@@ -18,12 +18,14 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, TrendingUp, Users, Store, Ban, CheckCircle2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loader2, TrendingUp, Users, Store, Ban, CheckCircle2, Eye, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface TenantStats {
   total_clinics: number;
   active_subscriptions: number;
+  defaulting_clinics: number;
   total_patients: number;
 }
 
@@ -31,6 +33,7 @@ interface Tenant {
   id: string;
   name: string;
   slug: string;
+  logo_url: string | null;
   owner_email: string;
   subscription_status: string;
   created_at: string;
@@ -47,7 +50,7 @@ export default function MasterDashboard() {
   useEffect(() => {
     if (!authLoading) {
       if (!profile?.is_super_admin) {
-        navigate("/acesso-negado"); // Or 404
+        navigate("/acesso-negado");
         return;
       }
       fetchData();
@@ -73,10 +76,6 @@ export default function MasterDashboard() {
   };
 
   const handleToggleBlock = async (tenantId: string, currentStatus: string) => {
-      // Toggle logic: If blocked (canceled), make active. If active, cancel.
-      // NOTE: This is a simplification. In real life, 'blocked' might be a separate flag from 'subscription_status'.
-      // Based on our RPC 'admin_toggle_tenant_status', we pass the new status enum string.
-
       const newStatus = currentStatus === 'canceled' ? 'active' : 'canceled';
       const actionName = newStatus === 'canceled' ? "Bloquear" : "Desbloquear";
 
@@ -91,12 +90,26 @@ export default function MasterDashboard() {
           if (error) throw error;
 
           toast.success(`Clínica ${newStatus === 'canceled' ? 'bloqueada' : 'desbloqueada'} com sucesso.`);
-          fetchData(); // Refresh list
+          fetchData();
 
       } catch (err: any) {
           console.error(err);
           toast.error("Erro ao atualizar status.");
       }
+  };
+
+  const handleImpersonate = (slug: string) => {
+      // In a real robust system, we would mint a token or set a special cookie.
+      // Since we updated RLS to allow is_super_admin to see everything,
+      // we can simply navigate to their dashboard.
+      // However, the OrganizationProvider might need to know we are impersonating if it checks 'profile.organization_id'.
+      // For now, we rely on the RLS bypass.
+      // Note: 'TenantLogin' might block us if we try to go through the login page logic.
+      // But if we go directly to /dashboard (which is protected), the protection logic needs to allow Super Admins.
+      // We'll handle the frontend permission check next.
+
+      // We open in new tab for convenience
+      window.open(`/portal/${slug}`, '_blank');
   };
 
   if (loading || authLoading) {
@@ -117,7 +130,7 @@ export default function MasterDashboard() {
         </div>
 
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Clínicas Totais</CardTitle>
@@ -129,17 +142,25 @@ export default function MasterDashboard() {
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Assinaturas Ativas</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-green-500" />
+                    <CardTitle className="text-sm font-medium">Ativas</CardTitle>
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">{stats?.active_subscriptions || 0}</div>
-                    <p className="text-xs text-muted-foreground">MRR Estimado: R$ {(stats?.active_subscriptions || 0) * 97},00</p>
                 </CardContent>
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Pacientes na Base</CardTitle>
+                    <CardTitle className="text-sm font-medium">Inadimplentes</CardTitle>
+                    <AlertCircle className="h-4 w-4 text-red-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-red-600">{stats?.defaulting_clinics || 0}</div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Pacientes</CardTitle>
                     <Users className="h-4 w-4 text-blue-500" />
                 </CardHeader>
                 <CardContent>
@@ -168,18 +189,28 @@ export default function MasterDashboard() {
                     <TableBody>
                         {tenants.map((tenant) => (
                             <TableRow key={tenant.id}>
-                                <TableCell className="font-medium">{tenant.name}</TableCell>
+                                <TableCell className="flex items-center gap-3 font-medium">
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={tenant.logo_url || undefined} />
+                                        <AvatarFallback>{tenant.name.substring(0,2).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    {tenant.name}
+                                </TableCell>
                                 <TableCell className="font-mono text-xs">{tenant.slug}</TableCell>
                                 <TableCell>{tenant.owner_email || "N/A"}</TableCell>
                                 <TableCell>{new Date(tenant.created_at).toLocaleDateString()}</TableCell>
                                 <TableCell>
-                                    <Badge variant={tenant.subscription_status === 'active' ? 'default' : 'secondary'} className={tenant.subscription_status === 'active' ? 'bg-green-500' : ''}>
+                                    <Badge
+                                        variant={tenant.subscription_status === 'active' || tenant.subscription_status === 'trial' ? 'default' : 'secondary'}
+                                        className={tenant.subscription_status === 'active' ? 'bg-green-500' : ''}
+                                    >
                                         {tenant.subscription_status}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right space-x-2">
-                                    <Button variant="ghost" size="sm" onClick={() => window.open(`/portal/${tenant.slug}`, '_blank')}>
-                                        Ver Portal
+                                    <Button variant="ghost" size="sm" onClick={() => handleImpersonate(tenant.slug)}>
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        Acessar Painel
                                     </Button>
                                     <Button
                                         variant={tenant.subscription_status === 'canceled' ? 'outline' : 'destructive'}
