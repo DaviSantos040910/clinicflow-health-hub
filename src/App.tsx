@@ -22,6 +22,7 @@ import TenantLogin from "./pages/TenantLogin";
 import NewClinic from "./pages/NewClinic";
 import Subscription from "./pages/Subscription";
 import PaymentCallback from "./pages/PaymentCallback";
+import WhatsappConfigPage from "./pages/WhatsappConfig";
 
 const queryClient = new QueryClient();
 
@@ -89,12 +90,22 @@ const App = () => (
                 }
               />
 
-              {/* Subscription Management - Role checked inside component as well, but ProtectedRoute adds layer */}
+              {/* Subscription Management */}
               <Route
                 path="/portal/:slug/assinatura"
                 element={
                   <ProtectedRoute>
                      <Subscription />
+                  </ProtectedRoute>
+                }
+              />
+
+               {/* Whatsapp Config */}
+               <Route
+                path="/portal/:slug/configuracoes/whatsapp"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'recepcionista']}>
+                     <WhatsappConfigPage />
                   </ProtectedRoute>
                 }
               />
