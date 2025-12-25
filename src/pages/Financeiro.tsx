@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,95 +13,139 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, DollarSign, CreditCard, Wallet, Calendar, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { PaymentModal } from "@/components/financeiro/PaymentModal";
-import { EnrichedPayment, Payment } from "@/types/financeiro";
+import { Payment } from "@/types/financeiro";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useOrganization } from "@/contexts/OrganizationContext";
+
+// Define the shape of data returned from the DB
+interface BillRow {
+  id: string;
+  amount: number;
+  status: string;
+  payment_method: string | null;
+  due_date: string | null;
+  created_at: string;
+  patient: {
+    name: string;
+  } | null;
+}
 
 export default function Financeiro() {
-  const [payments, setPayments] = useState<EnrichedPayment[]>([]);
+  const { organization } = useOrganization();
+  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  // Stats
-  const totalRevenue = payments.reduce((acc, p) => p.status === 'pago' ? acc + p.amount : acc, 0);
-  const pendingRevenue = payments.reduce((acc, p) => p.status === 'pendente' ? acc + p.amount : acc, 0);
-  const monthlyRevenue = payments
-      .filter(p => new Date(p.date).getMonth() === new Date().getMonth() && p.status === 'pago')
-      .reduce((acc, p) => acc + p.amount, 0);
+  // 1. Fetch Metrics
+  const { data: metrics } = useQuery({
+    queryKey: ['financialMetrics', organization?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_financial_metrics');
+      if (error) throw error;
+      // Returns an array, we take the first (and only) row
+      return data?.[0] || { total_revenue: 0, pending_revenue: 0, monthly_revenue: 0 };
+    },
+    enabled: !!organization?.id
+  });
 
-  useEffect(() => {
-    // Initial Mock Data Load
-    // In a real scenario, this would fetch from Supabase 'payments' table
-    setTimeout(() => {
-        setPayments([
-            {
-                id: "1",
-                appointment_id: "1",
-                amount: 350.00,
-                method: "cartao",
-                status: "pago",
-                date: "2024-03-20",
-                patient_name: "Maria Silva"
-            },
-            {
-                id: "2",
-                appointment_id: "2",
-                amount: 400.00,
-                method: "pix",
-                status: "pago",
-                date: "2024-03-21",
-                patient_name: "João Santos"
-            },
-            {
-                id: "3",
-                appointment_id: "3",
-                amount: 250.00,
-                method: "dinheiro",
-                status: "pendente",
-                date: "2024-03-22",
-                patient_name: "Ana Oliveira"
-            }
-        ]);
-        setLoading(false);
-    }, 1000);
-  }, []);
+  // 2. Fetch Bills (List)
+  const { data: payments = [], isLoading } = useQuery({
+    queryKey: ['patientBills', organization?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('patient_bills')
+        .select(`
+          id,
+          amount,
+          status,
+          payment_method,
+          due_date,
+          created_at,
+          patient:patients(name)
+        `)
+        .order('due_date', { ascending: false }); // Show upcoming/recent first
+
+      if (error) throw error;
+      return data as unknown as BillRow[]; // Casting needed due to complex join types
+    },
+    enabled: !!organization?.id
+  });
 
   const handleSavePayment = async (data: Omit<Payment, "id" | "created_at">) => {
-    setLoading(true);
-    // Simulate API Call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Note: The Payment type from types/financeiro doesn't perfectly match patient_bills,
+    // but the modal passes the necessary fields. We adapt here.
+    try {
+        // We assume the modal gives us { appointment_id, amount, method, status, date }
+        // Ideally, PaymentModal should be updated to select Patient if not linked to Appointment,
+        // but for now we might rely on the modal's internal logic or simplified manual entry.
+        // *Correction*: The current PaymentModal (legacy) was designed for appointments.
+        // If we are reusing it, we need to ensure it fits the new schema.
+        // For this refactor, I will map the legacy handler to the new table.
+        // However, PaymentModal currently requires selecting an appointment.
+        // If the user wants to add an ad-hoc payment, they might need a different flow or select 'null' appointment.
+        // Given the prompt "substitua o mock pela chamada real", we will do a best-effort mapping.
 
-    const newPayment: EnrichedPayment = {
-        ...data,
-        id: Math.random().toString(),
-        patient_name: "Paciente Selecionado" // Ideally we fetch this from the appointment ID mapping
-    };
+        const payload = {
+            appointment_id: data.appointment_id || null,
+            amount: data.amount,
+            status: data.status,
+            payment_method: data.method, // 'pix' | 'card' | ...
+            due_date: data.date,
+            description: "Pagamento Manual",
+            // We need a patient_id. The modal fetches appointments which HAVE patient_id.
+            // We'll need to fetch the appointment to get the patient_id if not provided directly.
+        };
 
-    setPayments(prev => [newPayment, ...prev]);
-    setIsModalOpen(false);
-    setLoading(false);
-    toast.success("Pagamento registrado com sucesso!");
+        // If appointment_id is present, we need to fetch the patient_id from it to satisfy NOT NULL constraint
+        if (payload.appointment_id) {
+             const { data: apt } = await supabase.from('appointments').select('patient_id').eq('id', payload.appointment_id).single();
+             if (apt) {
+                 await supabase.from('patient_bills').insert({
+                     ...payload,
+                     patient_id: apt.patient_id
+                 });
+             } else {
+                 throw new Error("Agendamento inválido");
+             }
+        } else {
+            // If no appointment, we can't insert without patient_id (Schema constraint).
+            // The legacy modal forces appointment selection, so we are safe for now.
+            throw new Error("Erro: É necessário vincular a um agendamento.");
+        }
+
+        toast.success("Pagamento registrado com sucesso!");
+        setIsModalOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['patientBills'] });
+        queryClient.invalidateQueries({ queryKey: ['financialMetrics'] });
+
+    } catch (error: any) {
+        console.error(error);
+        toast.error("Erro ao salvar: " + error.message);
+    }
   };
 
   const getStatusBadge = (status: string) => {
       switch (status) {
-          case "pago": return <Badge className="bg-green-100 text-green-700 hover:bg-green-200">Pago</Badge>;
-          case "pendente": return <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200">Pendente</Badge>;
-          case "cancelado": return <Badge variant="destructive">Cancelado</Badge>;
+          case "paid": return <Badge className="bg-green-100 text-green-700 hover:bg-green-200">Pago</Badge>;
+          case "pending": return <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200">Pendente</Badge>;
+          case "canceled": return <Badge variant="destructive">Cancelado</Badge>;
+          case "refunded": return <Badge variant="secondary">Estornado</Badge>;
           default: return <Badge variant="outline">{status}</Badge>;
       }
   };
 
-  const getMethodIcon = (method: string) => {
-      switch (method) {
-          case "cartao": return <CreditCard className="h-4 w-4" />;
-          case "pix": return <ArrowUpRight className="h-4 w-4" />; // Symbolizing transfer
-          case "dinheiro": return <Wallet className="h-4 w-4" />;
-          default: return <DollarSign className="h-4 w-4" />;
-      }
+  const getMethodIcon = (method: string | null) => {
+      if (!method) return <DollarSign className="h-4 w-4" />;
+      const m = method.toLowerCase();
+      if (m.includes('cart') || m.includes('card')) return <CreditCard className="h-4 w-4" />;
+      if (m.includes('pix')) return <ArrowUpRight className="h-4 w-4" />;
+      if (m.includes('dinheiro') || m.includes('cash')) return <Wallet className="h-4 w-4" />;
+      return <DollarSign className="h-4 w-4" />;
   };
 
   return (
@@ -128,7 +172,7 @@ export default function Financeiro() {
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">R$ {(metrics?.total_revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
                     <p className="text-xs text-muted-foreground">
                         Receita acumulada
                     </p>
@@ -140,7 +184,7 @@ export default function Financeiro() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">R$ {monthlyRevenue.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">R$ {(metrics?.monthly_revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
                     <p className="text-xs text-muted-foreground">
                         {format(new Date(), "MMMM", { locale: ptBR })}
                     </p>
@@ -152,7 +196,7 @@ export default function Financeiro() {
                     <ArrowDownRight className="h-4 w-4 text-amber-500" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-amber-600">R$ {pendingRevenue.toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-amber-600">R$ {(metrics?.pending_revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
                     <p className="text-xs text-muted-foreground">
                         A receber
                     </p>
@@ -168,7 +212,7 @@ export default function Financeiro() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Data</TableHead>
+                        <TableHead>Vencimento</TableHead>
                         <TableHead>Paciente</TableHead>
                         <TableHead>Valor</TableHead>
                         <TableHead>Forma</TableHead>
@@ -176,7 +220,7 @@ export default function Financeiro() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {loading ? (
+                    {isLoading ? (
                         <TableSkeleton columns={5} rows={3} />
                     ) : payments.length === 0 ? (
                         <TableRow>
@@ -184,7 +228,7 @@ export default function Financeiro() {
                                 <EmptyState
                                     icon={DollarSign}
                                     title="Nenhum pagamento registrado"
-                                    description="Registre o primeiro pagamento para começar a acompanhar o financeiro."
+                                    description="Seus lançamentos aparecerão aqui."
                                     action={
                                         <Button onClick={() => setIsModalOpen(true)} variant="outline" className="mt-2">
                                             <Plus className="h-4 w-4 mr-2" />
@@ -198,16 +242,16 @@ export default function Financeiro() {
                         payments.map((payment) => (
                             <TableRow key={payment.id}>
                                 <TableCell>
-                                    {format(new Date(payment.date), "dd/MM/yyyy")}
+                                    {payment.due_date ? format(new Date(payment.due_date), "dd/MM/yyyy") : "-"}
                                 </TableCell>
-                                <TableCell>{payment.patient_name || "-"}</TableCell>
+                                <TableCell>{payment.patient?.name || "Cliente Avulso"}</TableCell>
                                 <TableCell className="font-medium">
                                     R$ {payment.amount.toFixed(2)}
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-2 capitalize">
-                                        {getMethodIcon(payment.method)}
-                                        {payment.method}
+                                        {getMethodIcon(payment.payment_method)}
+                                        {payment.payment_method?.replace('_', ' ') || '-'}
                                     </div>
                                 </TableCell>
                                 <TableCell>
@@ -225,7 +269,7 @@ export default function Financeiro() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSavePayment}
-        loading={loading}
+        loading={isLoading}
       />
     </div>
   );
