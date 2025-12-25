@@ -37,6 +37,7 @@ export function BillingModal({
   const { organization } = useOrganization();
   const [step, setStep] = useState<"input" | "success">("input");
   const [amount, setAmount] = useState<number>(initialAmount);
+  const [description, setDescription] = useState<string>("Consulta Médica");
   const [loading, setLoading] = useState(false);
   const [billData, setBillData] = useState<{ url: string; bill_id: string } | null>(null);
 
@@ -47,7 +48,7 @@ export function BillingModal({
         body: {
           appointment_id: appointmentId,
           amount: amount,
-          description: `Consulta com ${professionalName}`
+          description: description
         }
       });
 
@@ -74,7 +75,10 @@ export function BillingModal({
 
   const sendWhatsApp = () => {
     if (!billData?.url) return;
-    const message = `Olá ${patientName}, aqui é da ${organization?.name}. Segue o link para pagamento da sua consulta: ${billData.url}`;
+    const message = `Olá ${patientName}, aqui é da ${organization?.name}.
+Para confirmar seu agendamento, por favor utilize o link seguro abaixo:
+${billData.url}
+Obrigado!`;
     const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
@@ -94,6 +98,7 @@ export function BillingModal({
              html: `
                 <h1>Olá ${patientName},</h1>
                 <p>Aqui está o link para pagamento da sua consulta com ${professionalName}.</p>
+                <p><strong>${description}</strong></p>
                 <p><a href="${billData.url}">Clique aqui para pagar</a></p>
                 <p>Valor: R$ ${amount.toFixed(2)}</p>
              `
@@ -120,6 +125,15 @@ export function BillingModal({
 
         {step === "input" ? (
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="description">Descrição</Label>
+              <Input
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Ex: Consulta Dermatologia"
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="amount">Valor da Consulta (R$)</Label>
               <Input

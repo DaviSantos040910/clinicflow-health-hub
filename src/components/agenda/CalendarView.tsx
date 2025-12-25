@@ -1,10 +1,12 @@
 import { format, startOfWeek, addDays, isSameDay, parseISO, isSameWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Loader2, DollarSign, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppointmentData } from "./AppointmentModal";
 import { EnrichedAppointment } from "@/pages/Agenda";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CalendarViewProps {
   appointments: EnrichedAppointment[];
@@ -29,6 +31,8 @@ export function CalendarView({
   onSelectAppointment,
   loading = false,
 }: CalendarViewProps) {
+  // Use state to store bill statuses: { appointment_id: 'paid' | 'pending' | null }
+  const [billStatuses, setBillStatuses] = useState<Record<string, string>>({});
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday start
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -50,6 +54,29 @@ export function CalendarView({
       default: return "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200"; // agendada
     }
   };
+
+  // Fetch billing statuses for displayed appointments
+  useEffect(() => {
+    if (appointments.length > 0) {
+      const ids = appointments.map(a => a.id).filter(Boolean);
+      const fetchBills = async () => {
+        const { data } = await supabase
+          .from("patient_bills")
+          .select("appointment_id, status")
+          .in("appointment_id", ids);
+
+        if (data) {
+          const statusMap: Record<string, string> = {};
+          data.forEach(bill => {
+            if (bill.appointment_id) statusMap[bill.appointment_id] = bill.status;
+          });
+          setBillStatuses(statusMap);
+        }
+      };
+
+      fetchBills();
+    }
+  }, [appointments]);
 
   return (
     <div className="flex flex-col h-full bg-card border rounded-lg shadow-sm overflow-hidden">
@@ -167,11 +194,23 @@ export function CalendarView({
                           onSelectAppointment(apt);
                         }}
                         className={cn(
-                          "mb-1 p-2 rounded text-xs border cursor-pointer shadow-sm transition-all hover:shadow-md",
+                          "mb-1 p-2 rounded text-xs border cursor-pointer shadow-sm transition-all hover:shadow-md relative",
                           getStatusColor(apt.status)
                         )}
                       >
-                        <div className="font-semibold truncate">
+                        {/* Bill Status Indicator */}
+                        {apt.id && billStatuses[apt.id] === 'paid' && (
+                           <div className="absolute top-1 right-1 bg-white rounded-full p-[1px] shadow-sm">
+                              <CheckCircle2 className="h-3 w-3 text-green-600" />
+                           </div>
+                        )}
+                        {apt.id && billStatuses[apt.id] === 'pending' && (
+                           <div className="absolute top-1 right-1 bg-white rounded-full p-[1px] shadow-sm">
+                              <DollarSign className="h-3 w-3 text-amber-500" />
+                           </div>
+                        )}
+
+                        <div className="font-semibold truncate pr-4">
                            {apt.time} - {apt.patient_name || "Paciente"}
                         </div>
                         <div className="truncate opacity-75">
