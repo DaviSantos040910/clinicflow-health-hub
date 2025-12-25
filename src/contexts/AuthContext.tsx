@@ -12,6 +12,7 @@ interface Profile {
   avatar_url: string | null;
   organization_id: string | null;
   role: OrganizationRole | null;
+  is_super_admin?: boolean;
 }
 
 interface AuthContextType {

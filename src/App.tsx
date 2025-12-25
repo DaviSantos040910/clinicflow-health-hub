@@ -23,6 +23,7 @@ import NewClinic from "./pages/NewClinic";
 import Subscription from "./pages/Subscription";
 import PaymentCallback from "./pages/PaymentCallback";
 import WhatsappConfigPage from "./pages/WhatsappConfig";
+import MasterDashboard from "./pages/MasterDashboard";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,9 @@ const App = () => (
               {/* Tenant Login Portal */}
               <Route path="/portal/:slug" element={<TenantLogin />} />
               <Route path="/portal/callback" element={<PaymentCallback />} />
+
+              {/* Master Admin Route - Custom Protection Check inside Page Component */}
+              <Route path="/master-admin" element={<MasterDashboard />} />
 
               {/* Protected Routes (Dashboard) */}
               <Route

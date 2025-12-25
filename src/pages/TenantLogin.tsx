@@ -34,13 +34,25 @@ export default function TenantLogin() {
   useEffect(() => {
     const checkAccess = async () => {
       if (user && profile && organization && !isLoadingOrg && !isLoadingAuth) {
-        if (profile.organization_id === organization.id) {
-            navigate("/dashboard");
-        } else {
-            // User logged in but belongs to a different organization
+
+        // 1. Check Organization Membership
+        if (profile.organization_id !== organization.id) {
             setLoginError("Você não tem acesso a esta clínica.");
             await signOut();
+            return;
         }
+
+        // 2. Check Subscription Status (Block Access if Canceled/Suspended)
+        // Accessing 'subscription_status' might require typing update on Organization Context
+        const status = organization.subscription_status;
+        if (status === 'canceled' || status === 'past_due' || status === 'incomplete') {
+             setLoginError("O acesso desta clínica está temporariamente suspenso. Contate o administrador.");
+             await signOut();
+             return;
+        }
+
+        // Success
+        navigate("/dashboard");
       }
     };
 
