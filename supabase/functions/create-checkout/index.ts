@@ -44,12 +44,19 @@ serve(async (req) => {
       throw new Error("User does not have an organization");
     }
 
-    // Check if owner (Requirement from prompt: "acessível apenas para o Dono")
-    // Although the frontend hides the page, backend should verify.
-    // Note: The prompt asked for frontend page to be owner-only, implies backend should enforce too.
+    // Check if owner
     if (profile.role !== 'owner') {
          throw new Error("Only the organization owner can subscribe.");
     }
+
+    // Fetch Organization Slug for redirection
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("slug")
+      .eq("id", profile.organization_id)
+      .single();
+
+    if (!org) throw new Error("Organization not found");
 
     const { price_id } = await req.json();
     if (!price_id) throw new Error("Missing price_id");
@@ -65,7 +72,7 @@ serve(async (req) => {
       ],
       mode: "subscription",
       success_url: `${req.headers.get("origin")}/portal/callback?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/portal/assinatura`, // Generic fallback
+      cancel_url: `${req.headers.get("origin")}/portal/${org.slug}/assinatura`,
       customer_email: user.email,
       subscription_data: {
         metadata: {
