@@ -47,36 +47,34 @@ serve(async (req) => {
          throw new Error("Permission denied: Only Admin or Receptionist can generate payment links.");
     }
 
-    const { appointment_id, amount, description } = await req.json();
-    if (!appointment_id || !amount) throw new Error("Missing required fields: appointment_id, amount");
+    const { appointment_id, patient_id, amount, description } = await req.json();
+    if (!amount) throw new Error("Missing required field: amount");
+    if (!appointment_id && !patient_id) throw new Error("Must provide appointment_id or patient_id");
 
-    // 2. Fetch Billing Config (Optional: logic for custom gateway accounts)
-    // For this implementation, we simulate using the platform's main Stripe account.
-    // In a real Connect scenario, we would use:
-    /*
-    const { data: billingConfig } = await supabase
-      .from("organization_billing_configs")
-      .select("payment_gateway_account_id")
-      .eq("organization_id", profile.organization_id)
-      .single();
-    */
+    // 2. Resolve Patient ID
+    let finalPatientId = patient_id;
+    if (!finalPatientId && appointment_id) {
+        const { data: appointment } = await supabase
+          .from("appointments")
+          .select("patient_id")
+          .eq("id", appointment_id)
+          .single();
 
-    // 3. Fetch Appointment to get Patient ID
-    const { data: appointment } = await supabase
-      .from("appointments")
-      .select("patient_id")
-      .eq("id", appointment_id)
-      .single();
+        if (appointment) {
+            finalPatientId = appointment.patient_id;
+        } else {
+            throw new Error("Appointment not found");
+        }
+    }
 
-    if (!appointment) throw new Error("Appointment not found");
-
-    // 4. Create Bill Record (Pending)
+    // 3. Create Bill Record (Pending)
+    // We create this BEFORE Stripe to ensure we have a record to attach metadata to.
     const { data: bill, error: billError } = await supabase
       .from("patient_bills")
       .insert({
         organization_id: profile.organization_id,
-        appointment_id: appointment_id,
-        patient_id: appointment.patient_id,
+        appointment_id: appointment_id || null,
+        patient_id: finalPatientId,
         amount: amount,
         status: 'pending',
         description: description,
@@ -88,17 +86,17 @@ serve(async (req) => {
 
     if (billError) throw billError;
 
-    // 5. Create Stripe Checkout Session
+    // 4. Create Stripe Checkout Session
     const origin = req.headers.get("origin") || 'http://localhost:3000';
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+      payment_method_types: ["card", "boleto"],
       line_items: [
         {
           price_data: {
             currency: 'brl',
             product_data: {
-              name: description || `Consulta - Agendamento #${appointment_id.slice(0, 8)}`,
+              name: description || `Consulta Médica`,
             },
             unit_amount: Math.round(amount * 100), // cents
           },
@@ -108,16 +106,18 @@ serve(async (req) => {
       mode: "payment",
       success_url: `${origin}/portal/callback?bill_id=${bill.id}`,
       cancel_url: `${origin}/dashboard`,
-      customer_email: undefined,
+      // customer_email: We could pass patient email if we fetched it, but skipping for brevity
       metadata: {
         type: 'appointment_payment',
+        bill_type: 'consultation', // Specific requirement
         organization_id: profile.organization_id,
         bill_id: bill.id,
-        appointment_id: appointment_id
+        appointment_id: appointment_id || '',
+        patient_id: finalPatientId
       },
     });
 
-    // 6. Update Bill with Link
+    // 5. Update Bill with Link
     await supabase
       .from("patient_bills")
       .update({
