@@ -77,9 +77,9 @@ ALTER TABLE public.professionals ALTER COLUMN organization_id SET NOT NULL;
 -- Organizations
 ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Authenticated users can view organizations" ON public.organizations;
-CREATE POLICY "Authenticated users can view organizations" ON public.organizations
-  FOR SELECT USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Anyone can view organizations" ON public.organizations;
+CREATE POLICY "Anyone can view organizations" ON public.organizations
+  FOR SELECT USING (true);
 
 -- Business Tables Policies
 ALTER TABLE public.patients ENABLE ROW LEVEL SECURITY;
