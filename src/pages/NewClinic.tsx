@@ -14,7 +14,6 @@ export default function NewClinic() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
 
-  const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,48 +53,27 @@ export default function NewClinic() {
         }
 
         // 2. Create User (Sign Up)
-        const { error: signUpError } = await signUp(email, password, ownerName, "admin"); // Default to 'admin' initially in AuthContext
+        const { error: signUpError } = await signUp(email, password, ownerName, "admin");
 
         if (signUpError) throw signUpError;
 
         // Wait a moment for session to establish if auto-confirm is on
-        // In a real app with email confirmation, this flow breaks here.
-        // Assuming auto-confirm for "Demo/MVP".
-
-        // 3. Create Organization
-        // We need the user to be logged in to create the organization (per our new RLS)
-        // If signUp doesn't auto-login (depends on config), we might need to signIn.
-        // Supabase signUp returns session if auto-confirm is on.
-
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
             throw new Error("Não foi possível autenticar automaticamente. Por favor, verifique seu email.");
         }
 
-        const { data: orgData, error: orgError } = await supabase
-            .from('organizations')
-            .insert({
-                name: clinicName,
-                slug: slug,
-                primary_color: primaryColor
-            })
-            .select()
-            .single();
+        // 3. Create Organization & Link Profile via Secure RPC
+        // This replaces the previous client-side logic that required loose RLS policies
+        const { data: orgData, error: rpcError } = await supabase
+            .rpc('create_organization_and_owner', {
+                org_name: clinicName,
+                org_slug: slug,
+                org_color: primaryColor,
+                user_name: ownerName
+            });
 
-        if (orgError) throw orgError;
-
-        // 4. Link User to Organization as Owner
-        // The trigger 'handle_new_user' might have created a profile with null org_id.
-        // We update it now.
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .update({
-                organization_id: orgData.id,
-                role: 'owner'
-            })
-            .eq('id', session.user.id);
-
-        if (profileError) throw profileError;
+        if (rpcError) throw rpcError;
 
         toast.success("Clínica criada com sucesso!");
         navigate(`/portal/${slug}`);

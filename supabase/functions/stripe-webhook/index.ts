@@ -37,6 +37,34 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
     switch (event.type) {
+      // 1. Handle One-Time Payments (Patient Billing)
+      case "checkout.session.completed": {
+        const session = event.data.object;
+        const metadata = session.metadata;
+
+        if (metadata && metadata.type === 'appointment_payment') {
+           const { bill_id, appointment_id } = metadata;
+
+           if (bill_id) {
+             // Mark Bill as Paid
+             await supabase
+               .from("bills")
+               .update({ status: 'paid', payment_method: 'stripe_checkout' }) // Confirm method
+               .eq("id", bill_id);
+           }
+
+           if (appointment_id) {
+             // Mark Appointment as Confirmed/Paid
+             await supabase
+               .from("appointments")
+               .update({ status: 'confirmada' }) // Using 'confirmada' based on known enums
+               .eq("id", appointment_id);
+           }
+        }
+        break;
+      }
+
+      // 2. Handle Subscriptions (SaaS Billing)
       case "invoice.payment_succeeded": {
         const invoice = event.data.object;
         const subscriptionId = invoice.subscription;
@@ -47,20 +75,22 @@ serve(async (req) => {
         // Option B: We look up by customer_id if we saved it previously.
 
         // Let's try to fetch the subscription to get metadata if not present in invoice
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId as string);
-        const organizationId = subscription.metadata.organization_id;
+        if (subscriptionId) {
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId as string);
+          const organizationId = subscription.metadata.organization_id;
 
-        if (organizationId) {
-            await supabase
-            .from("organizations")
-            .update({
-              subscription_status: "active",
-              stripe_customer_id: customerId as string,
-              // We could also infer plan_type from the price_id in the invoice lines
-            })
-            .eq("id", organizationId);
-        } else {
-            console.error("No organization_id found in subscription metadata");
+          if (organizationId) {
+              await supabase
+              .from("organizations")
+              .update({
+                subscription_status: "active",
+                stripe_customer_id: customerId as string,
+                // We could also infer plan_type from the price_id in the invoice lines
+              })
+              .eq("id", organizationId);
+          } else {
+              console.error("No organization_id found in subscription metadata");
+          }
         }
         break;
       }
