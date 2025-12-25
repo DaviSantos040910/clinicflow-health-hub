@@ -1,7 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 interface EmailRequest {
   to: string;
@@ -18,13 +21,19 @@ serve(async (req) => {
 
   try {
     // 2. Validate Authorization
-    // The Supabase client sends the JWT in the Authorization header.
-    // We could verify it using supabase.auth.getUser(), but often just presence is checked if RLS isn't needed deeply here.
-    // However, robust code should check it.
-    // For this generic function, checking for the header is a basic first step.
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       throw new Error("Missing Authorization header");
+    }
+
+    // Verify JWT with Supabase Auth
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      throw new Error("Invalid or expired token");
     }
 
     // 3. Parse and Validate Body
