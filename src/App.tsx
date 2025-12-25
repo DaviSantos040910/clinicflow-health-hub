@@ -20,6 +20,8 @@ import Financeiro from "./pages/Financeiro";
 import NotFound from "./pages/NotFound";
 import TenantLogin from "./pages/TenantLogin";
 import NewClinic from "./pages/NewClinic";
+import Subscription from "./pages/Subscription";
+import PaymentCallback from "./pages/PaymentCallback";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +45,7 @@ const App = () => (
 
               {/* Tenant Login Portal */}
               <Route path="/portal/:slug" element={<TenantLogin />} />
+              <Route path="/portal/callback" element={<PaymentCallback />} />
 
               {/* Protected Routes (Dashboard) */}
               <Route
@@ -85,6 +88,17 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+
+              {/* Subscription Management - Role checked inside component as well, but ProtectedRoute adds layer */}
+              <Route
+                path="/portal/:slug/assinatura"
+                element={
+                  <ProtectedRoute>
+                     <Subscription />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
