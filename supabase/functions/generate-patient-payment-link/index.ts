@@ -72,13 +72,14 @@ serve(async (req) => {
 
     // 4. Create Bill Record (Pending)
     const { data: bill, error: billError } = await supabase
-      .from("bills")
+      .from("patient_bills")
       .insert({
         organization_id: profile.organization_id,
         appointment_id: appointment_id,
         patient_id: appointment.patient_id,
         amount: amount,
         status: 'pending',
+        description: description,
         created_by: user.id,
         payment_method: 'stripe_checkout'
       })
@@ -105,9 +106,9 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/portal/callback?bill_id=${bill.id}`, // Reuse the callback page? Or a specific one.
-      cancel_url: `${origin}/dashboard`, // TODO: Redirect to specific page
-      customer_email: undefined, // We could pass patient email if we fetched it
+      success_url: `${origin}/portal/callback?bill_id=${bill.id}`,
+      cancel_url: `${origin}/dashboard`,
+      customer_email: undefined,
       metadata: {
         type: 'appointment_payment',
         organization_id: profile.organization_id,
@@ -118,8 +119,11 @@ serve(async (req) => {
 
     // 6. Update Bill with Link
     await supabase
-      .from("bills")
-      .update({ payment_link: session.url })
+      .from("patient_bills")
+      .update({
+        payment_link_url: session.url,
+        external_reference_id: session.id
+      })
       .eq("id", bill.id);
 
     return new Response(JSON.stringify({ url: session.url, bill_id: bill.id }), {

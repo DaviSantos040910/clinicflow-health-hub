@@ -234,6 +234,79 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_bills: {
+        Row: {
+          id: string
+          organization_id: string
+          patient_id: string
+          appointment_id: string | null
+          amount: number
+          status: 'pending' | 'paid' | 'canceled' | 'refunded'
+          description: string | null
+          payment_method: string | null
+          payment_link_url: string | null
+          external_reference_id: string | null
+          due_date: string | null
+          paid_at: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id?: string
+          patient_id: string
+          appointment_id?: string | null
+          amount: number
+          status?: 'pending' | 'paid' | 'canceled' | 'refunded'
+          description?: string | null
+          payment_method?: string | null
+          payment_link_url?: string | null
+          external_reference_id?: string | null
+          due_date?: string | null
+          paid_at?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          patient_id?: string
+          appointment_id?: string | null
+          amount?: number
+          status?: 'pending' | 'paid' | 'canceled' | 'refunded'
+          description?: string | null
+          payment_method?: string | null
+          payment_link_url?: string | null
+          external_reference_id?: string | null
+          due_date?: string | null
+          paid_at?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_bills_patient_id_fkey"
+            columns: ["patient_id"]
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_bills_appointment_id_fkey"
+            columns: ["appointment_id"]
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_bills_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

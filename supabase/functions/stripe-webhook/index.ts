@@ -48,8 +48,12 @@ serve(async (req) => {
            if (bill_id) {
              // Mark Bill as Paid
              await supabase
-               .from("bills")
-               .update({ status: 'paid', payment_method: 'stripe_checkout' }) // Confirm method
+               .from("patient_bills")
+               .update({
+                 status: 'paid',
+                 payment_method: 'stripe_checkout',
+                 paid_at: new Date().toISOString()
+               })
                .eq("id", bill_id);
            }
 
