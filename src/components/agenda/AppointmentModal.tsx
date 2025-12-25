@@ -118,7 +118,7 @@ export function AppointmentModal({
   const fetchBillStatus = async (appointmentId: string) => {
     try {
        const { data, error } = await supabase
-         .from('bills')
+         .from('patient_bills')
          .select('status, due_date, amount')
          .eq('appointment_id', appointmentId)
          .maybeSingle();
@@ -164,7 +164,7 @@ export function AppointmentModal({
     }
   };
 
-  const canManageBilling = hasPermission(['admin', 'recepcionista', 'owner']);
+  const canManageBilling = hasPermission(['admin', 'receptionist', 'owner']);
 
   const getPatientInfo = () => {
      const p = patients.find(pat => pat.id === formData.patient_id);
