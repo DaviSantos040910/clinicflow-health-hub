@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Save, MessageSquare, Plus, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Loader2, Save, MessageSquare, Plus, Trash2, QrCode, AlertTriangle, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function WhatsappConfigPage() {
@@ -46,7 +48,6 @@ export default function WhatsappConfigPage() {
         if (error) throw error;
 
         if (data) {
-            // Ensure trigger_menu is treated as a Record<string, string>
             const menu = data.trigger_menu as Record<string, string> || {};
             setConfig({
                 ...data,
@@ -64,10 +65,6 @@ export default function WhatsappConfigPage() {
   const handleSave = async () => {
       setIsSaving(true);
       try {
-          // Check if config exists to decide Update or Insert
-          // We can use upsert since we have a unique constraint on organization_id,
-          // but we need the ID if it exists to be clean, or let upsert handle conflict.
-
           const payload = {
               organization_id: organization!.id,
               instance_id: config.instance_id,
@@ -121,50 +118,72 @@ export default function WhatsappConfigPage() {
 
   return (
     <div className="container py-8 space-y-8">
-        <div>
-            <h1 className="text-3xl font-display font-bold">Bot WhatsApp</h1>
-            <p className="text-muted-foreground">Configure o assistente virtual da {organization?.name}</p>
+        <div className="flex justify-between items-center">
+            <div>
+                <h1 className="text-3xl font-display font-bold">Bot WhatsApp</h1>
+                <p className="text-muted-foreground">Configure o assistente virtual da {organization?.name}</p>
+            </div>
+            <Button onClick={handleSave} disabled={isSaving}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Save className="mr-2 h-4 w-4" />
+                Salvar Tudo
+            </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-            {/* Configuration Form */}
+            {/* Left Column: Configuration */}
             <div className="space-y-6">
 
-                {/* Connection Status */}
-                <Card>
+                {/* Connection Status Card */}
+                <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/20">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <WifiIcon isActive={config.is_active} />
-                            Status da Conexão
+                        <CardTitle className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <WifiIcon isActive={config.is_active} />
+                                Status da Conexão
+                            </div>
+                            <Badge variant={config.is_active ? "default" : "secondary"} className={config.is_active ? "bg-green-600" : "bg-yellow-500 text-white"}>
+                                {config.is_active ? "Online" : "Modo Simulação"}
+                            </Badge>
                         </CardTitle>
+                        <CardDescription>
+                            Gerencie a conexão com a API oficial.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <Label htmlFor="active-switch">Bot Ativo</Label>
+                            <Label htmlFor="active-switch" className="font-medium">Ativar Respostas Automáticas</Label>
                             <Switch
                                 id="active-switch"
                                 checked={config.is_active}
                                 onCheckedChange={(val) => setConfig(prev => ({...prev, is_active: val}))}
                             />
                         </div>
+
+                        {!config.is_active && (
+                            <div className="flex items-center gap-2 text-sm text-yellow-700 bg-yellow-100 p-3 rounded-md">
+                                <AlertTriangle className="h-4 w-4" />
+                                O bot está em modo simulação. Ele não responderá a mensagens reais.
+                            </div>
+                        )}
+
                         <Separator />
-                        <div className="space-y-2">
-                            <Label>Instance ID</Label>
-                            <Input
-                                placeholder="ex: inst_12345"
-                                value={config.instance_id || ''}
-                                onChange={e => setConfig(prev => ({...prev, instance_id: e.target.value}))}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>API Key</Label>
-                            <Input
-                                type="password"
-                                placeholder="••••••••••••"
-                                value={config.api_key || ''}
-                                onChange={e => setConfig(prev => ({...prev, api_key: e.target.value}))}
-                            />
+
+                        <div className="pt-2">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="outline" className="w-full gap-2 text-slate-600" disabled>
+                                            <QrCode className="h-4 w-4" />
+                                            Ler QR Code (Conectar WhatsApp Real)
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Funcionalidade em desenvolvimento</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </div>
                     </CardContent>
                 </Card>
@@ -174,77 +193,93 @@ export default function WhatsappConfigPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <MessageSquare className="h-5 w-5" />
-                            Mensagens
+                            Fluxo de Conversa
                         </CardTitle>
-                        <CardDescription>Personalize como o bot fala com seus pacientes.</CardDescription>
+                        <CardDescription>Personalize como o bot interage com seus pacientes.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Boas-vindas</Label>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-3">
+                            <Label className="text-base">Mensagem de Boas-vindas</Label>
                             <Textarea
-                                rows={3}
+                                className="min-h-[100px]"
                                 value={config.bot_welcome_message}
                                 onChange={e => setConfig(prev => ({...prev, bot_welcome_message: e.target.value}))}
+                                placeholder="Digite a mensagem inicial..."
                             />
-                            <p className="text-xs text-muted-foreground">Enviada quando o paciente inicia a conversa.</p>
+                            <p className="text-xs text-muted-foreground">
+                                Enviada automaticamente quando o paciente manda "Oi" ou inicia a conversa.
+                            </p>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label>Menu de Opções</Label>
-                            <div className="space-y-2">
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-base">Menu de Opções</Label>
+                                <Button variant="ghost" size="sm" onClick={addMenuOption} className="h-8 text-primary">
+                                    <Plus className="h-4 w-4 mr-1" /> Adicionar
+                                </Button>
+                            </div>
+
+                            <div className="space-y-3 bg-slate-50 p-4 rounded-lg border">
                                 {Object.entries(config.trigger_menu || {}).map(([key, value]) => (
-                                    <div key={key} className="flex gap-2 items-center">
-                                        <div className="bg-slate-100 px-3 py-2 rounded-md font-bold text-slate-600 min-w-[2.5rem] text-center">
+                                    <div key={key} className="flex gap-2 items-center group">
+                                        <div className="bg-white border px-3 py-2 rounded-md font-bold text-slate-700 min-w-[2.5rem] text-center shadow-sm">
                                             {key}
                                         </div>
                                         <Input
+                                            className="bg-white shadow-sm"
                                             value={value as string}
                                             onChange={(e) => updateMenuOption(key, e.target.value)}
                                         />
-                                        <Button variant="ghost" size="icon" onClick={() => removeMenuOption(key)}>
-                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => removeMenuOption(key)}
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 hover:bg-red-50"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 ))}
-                                <Button variant="outline" size="sm" onClick={addMenuOption} className="w-full mt-2 border-dashed">
-                                    <Plus className="h-4 w-4 mr-2" /> Adicionar Opção
-                                </Button>
+                                {Object.keys(config.trigger_menu || {}).length === 0 && (
+                                    <p className="text-sm text-center text-muted-foreground py-2">Nenhuma opção configurada.</p>
+                                )}
                             </div>
                         </div>
 
-                        <div className="space-y-2 pt-4">
-                            <Label>Mensagem de Erro (Fallback)</Label>
-                            <Textarea
-                                rows={2}
+                        <div className="space-y-3">
+                            <Label className="text-base">Mensagem de Erro (Fallback)</Label>
+                            <Input
                                 value={config.bot_fallback_message}
                                 onChange={e => setConfig(prev => ({...prev, bot_fallback_message: e.target.value}))}
+                                placeholder="Ex: Desculpe, não entendi."
                             />
-                            <p className="text-xs text-muted-foreground">Enviada quando o bot não entende a resposta.</p>
+                            <p className="text-xs text-muted-foreground">Enviada quando o bot não reconhece a resposta do paciente.</p>
                         </div>
                     </CardContent>
                 </Card>
-
-                <div className="flex justify-end">
-                    <Button onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">
-                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        <Save className="mr-2 h-4 w-4" />
-                        Salvar Alterações
-                    </Button>
-                </div>
-
             </div>
 
-            {/* Preview Section */}
-            <div className="hidden lg:block sticky top-8">
-                <div className="text-center mb-4">
-                    <h3 className="font-semibold text-lg">Pré-visualização</h3>
-                    <p className="text-sm text-muted-foreground">Como o paciente verá no WhatsApp</p>
+            {/* Right Column: Preview */}
+            <div className="hidden lg:block sticky top-8 h-fit">
+                <div className="bg-slate-100 rounded-xl p-6 border border-slate-200">
+                    <div className="text-center mb-6 space-y-2">
+                        <div className="flex items-center justify-center gap-2 text-primary font-semibold">
+                            <PlayCircle className="h-5 w-5" />
+                            <h3>Teste em Tempo Real</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground px-8">
+                            Interaja com o simulador abaixo para testar as respostas configuradas.
+                        </p>
+                    </div>
+
+                    <div className="flex justify-center">
+                        <ChatPreview
+                            config={config}
+                            clinicName={organization?.name || "Sua Clínica"}
+                            logoUrl={organization?.logo_url}
+                        />
+                    </div>
                 </div>
-                <ChatPreview
-                    config={config}
-                    clinicName={organization?.name || "Sua Clínica"}
-                    logoUrl={organization?.logo_url}
-                />
             </div>
 
         </div>
@@ -254,6 +289,6 @@ export default function WhatsappConfigPage() {
 
 function WifiIcon({ isActive }: { isActive?: boolean }) {
     return (
-        <div className={`h-3 w-3 rounded-full ${isActive ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-300'}`} />
+        <div className={`h-3 w-3 rounded-full transition-colors duration-500 ${isActive ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-400'}`} />
     );
 }
