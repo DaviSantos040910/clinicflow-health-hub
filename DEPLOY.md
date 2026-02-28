@@ -1,38 +1,102 @@
-# Checklist de Deploy (Vercel + Supabase)
+# Guia Definitivo de Deploy (Railway + Supabase)
 
-## 1. Variáveis de Ambiente (Vercel)
-Configure as seguintes chaves nas configurações do projeto na Vercel (Project Settings > Environment Variables):
+Este guia foi criado passo a passo para iniciantes. Vamos colocar o seu projeto no ar, dividindo a infraestrutura em duas partes:
+1. **Supabase**: Seu banco de dados, autenticação e servidor (Backend / Edge Functions).
+2. **Railway**: A hospedagem da sua aplicação feita em React e Vite (Frontend).
 
-### Frontend (Expostos para o cliente)
-- `VITE_SUPABASE_URL`: Sua URL do Supabase (ex: https://xyz.supabase.co)
-- `VITE_SUPABASE_ANON_KEY`: Sua chave pública `anon` do Supabase.
+Siga os passos exatamente nesta ordem!
 
-### Backend (Edge Functions)
-As Edge Functions rodam no Supabase, não na Vercel. Configure estas no Dashboard do Supabase (Settings > Edge Functions):
-- `STRIPE_SECRET_KEY`: Chave secreta da API do Stripe (`sk_test_...` ou `sk_live_...`).
-- `STRIPE_WEBHOOK_SECRET`: Segredo de assinatura do Webhook do Stripe (`whsec_...`).
-- `SENDGRID_API_KEY`: Chave de API do SendGrid para envio de e-mails (`SG...`).
-- `SUPABASE_URL`: (Geralmente auto-configurado, mas verifique).
-- `SUPABASE_SERVICE_ROLE_KEY`: (Auto-configurado, usado para operações admin).
+---
 
-## 2. Configurações de Build (Vercel)
-- **Framework Preset**: Vite
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
-- **Install Command**: `npm install` (ou `bun install` se usar Bun)
+## Parte 1: Configurando o Banco e Backend (Supabase)
 
-## 3. Webhooks (Configuração Externa)
-- **Stripe**: Aponte o webhook para `https://<seu-projeto>.supabase.co/functions/v1/stripe-webhook`.
-  - Eventos necessários:
-    - `checkout.session.completed`
-    - `invoice.payment_succeeded`
-    - `customer.subscription.deleted`
+O código já possui o Supabase totalmente integrado, mas precisamos de um ambiente "Real" na nuvem.
 
-## 4. Banco de Dados
-- Certifique-se de ter rodado todas as migrações SQL.
-- (Opcional) Rode o script `supabase/seed.sql` para popular dados de teste se for um ambiente de Staging.
+### Passo 1: Criar o Projeto
+1. Acesse [Supabase.com](https://supabase.com) e crie sua conta (ou faça login).
+2. Clique em **"New Project"**.
+3. Escolha um nome, defina uma senha forte para o banco de dados e aguarde a criação (leva cerca de 2 minutos).
 
-## 5. Verificações Finais
-- [ ] O domínio personalizado da Landing Page está configurado?
-- [ ] O DNS para o SendGrid (CNAMEs) está validado para evitar Spam?
-- [ ] O Stripe está em modo "Live" (Produção)?
+### Passo 2: Configurar o Banco de Dados (Subir Migrations)
+Seu projeto local tem tabelas cruciais (na pasta `supabase/migrations`). Você precisa enviar isso para a nuvem.
+1. Abra o terminal (no VSCode ou outro na pasta do seu projeto).
+2. Faça login pelo terminal (isso pedirá para você ir até o navegador copiar um token):
+   ```bash
+   npx supabase login
+   ```
+3. Vincule a sua conta da nuvem ao seu projeto local:
+   ```bash
+   npx supabase link --project-ref AQUI_VAI_A_SUA_REF
+   ```
+   > **Como descobrir SUA_REF**: Vá em *Project Settings* (no Supabase), a "Reference ID" são aquelas letrinhas aleatórias da sua URL. O próprio comando link guiará você.
+4. Empurre suas tabelas pro banco online (este comando irá solicitar a senha do banco criada no passo 1):
+   ```bash
+   npx supabase db push
+   ```
+
+### Passo 3: Hospedar suas Funções (E-mail e Pagamentos)
+Temos funções como o Checkout (Stripe) e E-mails (MailerSend). Elas ficam na pasta `supabase/functions/`. Vamos hospedá-las.
+1. No terminal, digite:
+   ```bash
+   npx supabase functions deploy
+   ```
+2. Após o sucesso, configure as chaves secretas (Senhas de verdade das APIS, não de teste) que farão elas funcionar no ambiente real:
+   ```bash
+   npx supabase secrets set STRIPE_SECRET_KEY=sua_chave_secreta_stripe
+   npx supabase secrets set STRIPE_WEBHOOK_SECRET=sua_secret_de_webhook
+   npx supabase secrets set MAILERSEND_API_KEY=sua_chave_api_mailersend
+   ```
+
+### Passo 4: Pegar Chaves para a Próxima Etapa
+Vá no painel do Supabase, em **Project Settings > API**:
+- Guarde a **Project URL** (ex: `https://xyz.supabase.co`).
+- Guarde a **Project API Key (anon / public)**.
+*Elas serão o "coração" que conectará seu Frontend (Railway) ao Banco.*
+
+---
+
+## Parte 2: Fazendo o Deploy no Railway (Frontend)
+
+O Railway descobre automaticamente que o projeto é Vite e já constrói o app para você. Configuramos o arquivo `package.json` para facilitar sua vida (o comando `npm start` usando `serve`).
+
+### Passo 1: Atualizar o GitHub
+Seu repositório no GitHub deve estar atualizado com o código atual. Use os comandos padrões de Git para fazer isso (`git commit` e `git push`).
+
+### Passo 2: Criar Projeto no Railway
+1. Acesse [Railway.app](https://railway.app), logue com seu GitHub.
+2. Na página inicial, clique em **"New Project"**.
+3. Selecione **"Deploy from GitHub repo"** e procure pelo repositório do seu projeto (ex: `clinicflow-health-hub`).
+4. Clique na sua nova aplicação e veja que ela vai começar o "Build" (Construção). Deixe estar ou clique para abortar, porque antes precisamos colocar as variáveis do passo 4 anterior.
+
+### Passo 3: Configurar Variáveis (Coração do Frontend)
+Sem isso, a página não carregará sistema de login algum.
+1. No painel do seu app no Railway, acesse a aba **"Variables"** (Variáveis).
+2. Adicione **DUAS** novas variáveis clicando em "New Variable". O nome deve ser em caps lock exatamente assim:
+   - Variável 1: `VITE_SUPABASE_URL` -> (Cole a URL do Supabase, com https://)
+   - Variável 2: `VITE_SUPABASE_PUBLISHABLE_KEY` -> (Cole a chave "anon" do Supabase)
+
+### Passo 4: Expor na Web (Domínio)
+1. Mude para a aba **"Settings"** (Configurações) no Railway.
+2. Desça até encontrar a área de **Networking**.
+3. Clique em **"Generate Domain"** (Gerar Domínio).
+   *O Railway vai criar um link público seu. Algo como: `nome-app.up.railway.app`.*
+
+### Passo 5: Autorizar o Acesso (A Cereja do Bolo)
+Se você tentar entrar agora, será impedido de logar. Precisamos dizer ao Supabase que este novo site tem permissão.
+1. Volte ao site do **Supabase**.
+2. Vá em **Authentication > URL Configuration**.
+3. Em *Site URL*, insira o seu novo link inteiro gerado pelo Railway (ex: `https://nome-app.up.railway.app`).
+4. Em *Redirect URLs*, insira exatamente a mesma URL e adicione as rotas importantes (ou apenas confie na principal, no modelo padrão). Salve.
+
+### Passo 6: Acesse seu Sistema!
+1. Volte ao Railway e clique no novo Domínio Público que foi gerado.
+2. A página deve carregar, e você já pode criar contas e testar a aplicação no ar!
+
+---
+
+## Checklist Rápido Pós-Deploy
+
+- [ ] O domínio público gerado pelo Railway abre a landing page do ClinicFlow?
+- [ ] O botão de acesso leva ao formulário de Login, permitindo o cadastro?
+- [ ] Os webhooks e painéis em `Stripe` ou `MailerSend` estão apontando para o seu novo site e suas novas rotas Supabase na nuvem? (Crucial para emissões e cobranças onlines!)
+- [ ] Está tudo configurado como SSL/HTTPS? Sim! O Railway e Supabase fazem isso sozinhos por você.

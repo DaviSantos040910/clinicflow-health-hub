@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 
-const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
+const MAILERSEND_API_KEY = Deno.env.get("MAILERSEND_API_KEY");
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
@@ -43,38 +43,48 @@ serve(async (req) => {
       throw new Error("Missing required fields: 'to' and 'subject'");
     }
 
-    if (!SENDGRID_API_KEY) {
-      console.error("SENDGRID_API_KEY is not set");
+    if (!MAILERSEND_API_KEY) {
+      console.error("MAILERSEND_API_KEY is not set");
       throw new Error("Internal Server Error: Email service configuration missing");
     }
 
-    // 4. Construct SendGrid Request
-    const sendGridBody = {
-      personalizations: [
-        {
-          to: [{ email: to }],
-          dynamic_template_data: dynamic_template_data,
-        },
+    // 4. Construct MailerSend Request
+    const mailerSendBody = {
+      from: {
+        email: "no-reply@clinicflow.app",
+        name: "ClinicFlow"
+      },
+      to: [
+        { email: to }
       ],
-      from: { email: "no-reply@clinicflow.app" }, // Replace with your verified sender
       subject: subject,
-      content: html ? [{ type: "text/html", value: html }] : undefined,
+      html: html,
+      variables: dynamic_template_data ? [
+        {
+          email: to,
+          substitutions: Object.entries(dynamic_template_data).map(([key, value]) => ({
+            var: key,
+            value: value,
+          })),
+        }
+      ] : undefined,
     };
 
-    // 5. Call SendGrid API
-    const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    // 5. Call MailerSend API
+    const res = await fetch("https://api.mailersend.com/v1/email", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${SENDGRID_API_KEY}`,
+        "X-Requested-With": "XMLHttpRequest",
+        Authorization: `Bearer ${MAILERSEND_API_KEY}`,
       },
-      body: JSON.stringify(sendGridBody),
+      body: JSON.stringify(mailerSendBody),
     });
 
     if (!res.ok) {
-        const errorData = await res.text();
-        console.error("SendGrid API Error:", errorData);
-        throw new Error(`SendGrid API Error: ${res.statusText}`);
+      const errorData = await res.text();
+      console.error("MailerSend API Error:", errorData);
+      throw new Error(`MailerSend API Error: ${res.statusText}`);
     }
 
     // 6. Return Success
@@ -87,7 +97,7 @@ serve(async (req) => {
     console.error("Error in send-email function:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400, // Or 500 depending on error type
+      status: 400,
     });
   }
 });
