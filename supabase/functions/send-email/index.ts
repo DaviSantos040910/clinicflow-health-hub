@@ -51,7 +51,7 @@ serve(async (req) => {
     // 4. Construct MailerSend Request
     const mailerSendBody = {
       from: {
-        email: "no-reply@clinicflow.app",
+        email: "MS_0Dk3U3@test-q3enl6kd7v042vwr.mlsender.net",
         name: "ClinicFlow"
       },
       to: [
