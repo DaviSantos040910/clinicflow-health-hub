@@ -1,11 +1,12 @@
 import { Header } from "@/components/Header";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
-import { 
-  Calendar, 
-  Users, 
-  FileText, 
-  DollarSign, 
-  TrendingUp, 
+import { useNavigate } from "react-router-dom";
+import {
+  Calendar,
+  Users,
+  FileText,
+  DollarSign,
+  TrendingUp,
   Clock,
   ChevronRight,
   Plus,
@@ -49,6 +50,7 @@ const rolePermissions: Record<AppRole, { label: string; icon: React.ElementType;
 
 export default function Dashboard() {
   const { profile, role, hasPermission } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStat[]>([
     {
@@ -93,108 +95,108 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-        // Fetch Appointments count for today
-        const today = new Date().toISOString().split("T")[0];
-        const { count: todayCount } = await supabase
-            .from("appointments")
-            .select("*", { count: "exact", head: true })
-            .gte("date_time", `${today}T00:00:00`)
-            .lte("date_time", `${today}T23:59:59`);
+      // Fetch Appointments count for today
+      const today = new Date().toISOString().split("T")[0];
+      const { count: todayCount } = await supabase
+        .from("appointments")
+        .select("*", { count: "exact", head: true })
+        .gte("date_time", `${today}T00:00:00`)
+        .lte("date_time", `${today}T23:59:59`);
 
-        // Fetch Total Appointments this month
-        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-        const nextMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString();
+      // Fetch Total Appointments this month
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+      const nextMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString();
 
-        const { count: monthCount } = await supabase
-             .from("appointments")
-             .select("*", { count: "exact", head: true })
-             .gte("date_time", startOfMonth)
-             .lt("date_time", nextMonth);
+      const { count: monthCount } = await supabase
+        .from("appointments")
+        .select("*", { count: "exact", head: true })
+        .gte("date_time", startOfMonth)
+        .lt("date_time", nextMonth);
 
-        // Fetch Upcoming Appointments (limit 5)
-        // Note: We might not have the foreign key for professionals yet,
-        // so we'll fetch basic data and patients for now to avoid join errors
-        const { data: upcoming } = await supabase
-            .from("appointments")
-            .select(`
+      // Fetch Upcoming Appointments (limit 5)
+      // Note: We might not have the foreign key for professionals yet,
+      // so we'll fetch basic data and patients for now to avoid join errors
+      const { data: upcoming } = await supabase
+        .from("appointments")
+        .select(`
                 *,
                 patient:patients(name)
             `)
-            .gte("date_time", new Date().toISOString())
-            .order("date_time", { ascending: true })
-            .limit(4);
+        .gte("date_time", new Date().toISOString())
+        .order("date_time", { ascending: true })
+        .limit(4);
 
-        // Update State
-        setStats(prev => [
-            { ...prev[0], value: (todayCount || 0).toString() },
-            { ...prev[1], value: (monthCount || 0).toString() },
-            { ...prev[2], value: "R$ 24.580" }, // Mocked for now as we don't have payment logic yet
-            { ...prev[3], value: "87%" } // Mocked
-        ]);
+      // Update State
+      setStats(prev => [
+        { ...prev[0], value: (todayCount || 0).toString() },
+        { ...prev[1], value: (monthCount || 0).toString() },
+        { ...prev[2], value: "R$ 24.580" }, // Mocked for now as we don't have payment logic yet
+        { ...prev[3], value: "87%" } // Mocked
+      ]);
 
-        if (upcoming) {
-            setUpcomingAppointments(upcoming.map(apt => ({
-                time: new Date(apt.date_time).toTimeString().substring(0, 5),
-                patient: apt.patient?.name || "Paciente",
-                type: "Consulta", // Generic
-                status: apt.status
-            })));
-        }
+      if (upcoming) {
+        setUpcomingAppointments(upcoming.map(apt => ({
+          time: new Date(apt.date_time).toTimeString().substring(0, 5),
+          patient: apt.patient?.name || "Paciente",
+          type: "Consulta", // Generic
+          status: apt.status
+        })));
+      }
 
     } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-        // Fallback to static data if error (e.g. timeout)
-        setStats(prev => [
-             { ...prev[0], value: "12" },
-             { ...prev[1], value: "128" },
-             { ...prev[2], value: "R$ 24.580" },
-             { ...prev[3], value: "87%" }
-        ]);
-        setUpcomingAppointments([
-            { time: "09:00", patient: "Maria Silva", type: "Consulta geral", status: "confirmado" },
-            { time: "10:30", patient: "João Santos", type: "Retorno", status: "confirmado" },
-        ]);
+      console.error("Error fetching dashboard data:", error);
+      // Fallback to static data if error (e.g. timeout)
+      setStats(prev => [
+        { ...prev[0], value: "12" },
+        { ...prev[1], value: "128" },
+        { ...prev[2], value: "R$ 24.580" },
+        { ...prev[3], value: "87%" }
+      ]);
+      setUpcomingAppointments([
+        { time: "09:00", patient: "Maria Silva", type: "Consulta geral", status: "confirmado" },
+        { time: "10:30", patient: "João Santos", type: "Retorno", status: "confirmado" },
+      ]);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
   const roleInfo = role ? rolePermissions[role] : null;
   const RoleIcon = roleInfo?.icon || User;
 
-  const filteredStats = stats.filter(stat => 
+  const filteredStats = stats.filter(stat =>
     role ? stat.roles.includes(role) : false
   );
 
   const quickActions = [
-    { 
-      label: "Novo agendamento", 
-      icon: Plus, 
+    {
+      label: "Novo agendamento",
+      icon: Plus,
       variant: "gradient" as const,
       roles: ["admin", "recepcionista"] as AppRole[]
     },
-    { 
-      label: "Novo paciente", 
-      icon: Users, 
+    {
+      label: "Novo paciente",
+      icon: Users,
       variant: "outline" as const,
       roles: ["admin", "recepcionista"] as AppRole[]
     },
-    { 
-      label: "Relatórios", 
-      icon: FileText, 
+    {
+      label: "Relatórios",
+      icon: FileText,
       variant: "outline" as const,
       roles: ["admin"] as AppRole[]
     },
   ];
 
-  const filteredActions = quickActions.filter(action => 
+  const filteredActions = quickActions.filter(action =>
     role ? action.roles.includes(role) : false
   );
 
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Header />
-      
+
       <main className="container py-8">
         {/* Welcome Section */}
         <div className="mb-8 animate-fade-in">
@@ -229,8 +231,8 @@ export default function Dashboard() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {filteredStats.map((stat, index) => (
-            <div 
-              key={stat.label} 
+            <div
+              key={stat.label}
               className="glass-card p-6 animate-fade-in-up"
               style={{ animationDelay: `${0.1 + index * 0.05}s` }}
             >
@@ -260,16 +262,16 @@ export default function Dashboard() {
           <div className="lg:col-span-2 glass-card p-6 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-display font-semibold">
-                {hasPermission(["profissional"]) && !hasPermission(["admin", "recepcionista"]) 
-                  ? "Suas próximas consultas" 
+                {hasPermission(["profissional"]) && !hasPermission(["admin", "recepcionista"])
+                  ? "Suas próximas consultas"
                   : "Próximas consultas"}
               </h2>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/agenda')}>
                 Ver todas
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
-            
+
             <div className="space-y-4">
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
@@ -293,28 +295,27 @@ export default function Dashboard() {
                 />
               ) : (
                 upcomingAppointments.map((appointment, index) => (
-                    <div
+                  <div
                     key={index}
                     className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                    >
+                  >
                     <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent text-primary">
-                        <Clock className="h-5 w-5" />
+                      <Clock className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground truncate">{appointment.patient}</p>
-                        <p className="text-sm text-muted-foreground">{appointment.type}</p>
+                      <p className="font-medium text-foreground truncate">{appointment.patient}</p>
+                      <p className="text-sm text-muted-foreground">{appointment.type}</p>
                     </div>
                     <div className="text-right">
-                        <p className="font-medium text-foreground">{appointment.time}</p>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                        appointment.status === "confirmado"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-amber-100 text-amber-700"
+                      <p className="font-medium text-foreground">{appointment.time}</p>
+                      <span className={`text-xs px-2 py-1 rounded-full ${appointment.status === "confirmado"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-amber-100 text-amber-700"
                         }`}>
                         {appointment.status}
-                        </span>
+                      </span>
                     </div>
-                    </div>
+                  </div>
                 ))
               )}
             </div>
@@ -323,7 +324,7 @@ export default function Dashboard() {
           {/* Quick Stats / Activity */}
           <div className="glass-card p-6 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
             <h2 className="text-lg font-display font-semibold mb-6">Atividade recente</h2>
-            
+
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <div className="w-2 h-2 mt-2 rounded-full bg-primary" />

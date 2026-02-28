@@ -33,7 +33,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center">
+        <Link to={user ? "/dashboard" : "/"} className="flex items-center">
           <Logo />
         </Link>
 
@@ -47,9 +47,11 @@ export function Header() {
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/pacientes">Pacientes</Link>
               </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/profissionais">Profissionais</Link>
-              </Button>
+              {role !== 'profissional' && (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/profissionais">Profissionais</Link>
+                </Button>
+              )}
               {role === 'admin' && (
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/financeiro">Financeiro</Link>
@@ -77,7 +79,7 @@ export function Header() {
                 <Link to="/login">Entrar</Link>
               </Button>
               <Button variant="gradient" asChild>
-                <Link to="/cadastro">Começar grátis</Link>
+                <Link to="/contato">Entrar em Contato</Link>
               </Button>
             </>
           )}
@@ -119,9 +121,11 @@ export function Header() {
                 <Button variant="ghost" asChild className="justify-start">
                   <Link to="/pacientes">Pacientes</Link>
                 </Button>
-                <Button variant="ghost" asChild className="justify-start">
-                  <Link to="/profissionais">Profissionais</Link>
-                </Button>
+                {role !== 'profissional' && (
+                  <Button variant="ghost" asChild className="justify-start">
+                    <Link to="/profissionais">Profissionais</Link>
+                  </Button>
+                )}
                 {role === 'admin' && (
                   <Button variant="ghost" asChild className="justify-start">
                     <Link to="/financeiro">Financeiro</Link>
@@ -138,7 +142,7 @@ export function Header() {
                   <Link to="/login">Entrar</Link>
                 </Button>
                 <Button variant="gradient" asChild>
-                  <Link to="/cadastro">Começar grátis</Link>
+                  <Link to="/contato">Entrar em Contato</Link>
                 </Button>
               </>
             )}

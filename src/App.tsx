@@ -8,7 +8,7 @@ import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
-import Cadastro from "./pages/Cadastro";
+import Contato from "./pages/Contato";
 import EsqueciSenha from "./pages/EsqueciSenha";
 import RedefinirSenha from "./pages/RedefinirSenha";
 import AcessoNegado from "./pages/AcessoNegado";
@@ -39,8 +39,9 @@ const App = () => (
               {/* Public Global Routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/cadastro" element={<Cadastro />} />
-              <Route path="/nova-clinica" element={<NewClinic />} />
+              <Route path="/contato" element={<Contato />} />
+              <Route path="/cadastro" element={<Contato />} />
+              <Route path="/nova-clinica" element={<Contato />} />
               <Route path="/esqueci-senha" element={<EsqueciSenha />} />
               <Route path="/redefinir-senha" element={<RedefinirSenha />} />
               <Route path="/acesso-negado" element={<AcessoNegado />} />
@@ -65,7 +66,7 @@ const App = () => (
                 path="/financeiro"
                 element={
                   // Updated roles to match new DB schema + added 'owner'
-                  <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                  <ProtectedRoute allowedRoles={['admin']}>
                     <Financeiro />
                   </ProtectedRoute>
                 }
@@ -89,7 +90,7 @@ const App = () => (
               <Route
                 path="/profissionais"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'recepcionista']}>
                     <Profissionais />
                   </ProtectedRoute>
                 }
@@ -99,19 +100,19 @@ const App = () => (
               <Route
                 path="/portal/:slug/assinatura"
                 element={
-                  <ProtectedRoute allowedRoles={['owner']}>
-                     <Subscription />
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <Subscription />
                   </ProtectedRoute>
                 }
               />
 
-               {/* Whatsapp Config */}
-               <Route
+              {/* Whatsapp Config */}
+              <Route
                 path="/portal/:slug/configuracoes/whatsapp"
                 element={
                   // Updated roles to match new DB schema + added 'owner'
-                  <ProtectedRoute allowedRoles={['owner', 'admin', 'receptionist']}>
-                     <WhatsappConfigPage />
+                  <ProtectedRoute allowedRoles={['admin', 'recepcionista']}>
+                    <WhatsappConfigPage />
                   </ProtectedRoute>
                 }
               />
