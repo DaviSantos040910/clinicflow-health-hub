@@ -100,6 +100,7 @@ END;
 $$;
 
 -- 4. Update Get All Tenants RPC to include Logo URL
+DROP FUNCTION IF EXISTS public.get_all_tenants();
 CREATE OR REPLACE FUNCTION public.get_all_tenants()
 RETURNS TABLE (
   id UUID,
