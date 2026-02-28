@@ -24,6 +24,7 @@ import Subscription from "./pages/Subscription";
 import PaymentCallback from "./pages/PaymentCallback";
 import WhatsappConfigPage from "./pages/WhatsappConfig";
 import MasterDashboard from "./pages/MasterDashboard";
+import { WhatsAppCTA } from "@/components/WhatsAppCTA";
 
 const queryClient = new QueryClient();
 
@@ -120,6 +121,7 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <WhatsAppCTA />
           </BrowserRouter>
         </TooltipProvider>
       </OrganizationProvider>

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Shield, User, Stethoscope, CheckCircle2, X } from "lucide-react";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -14,11 +14,77 @@ const loginSchema = z.object({
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
 });
 
+const demoProfiles = [
+  {
+    role: "admin" as const,
+    label: "Administrador",
+    icon: Shield,
+    email: "admin@vidasaudavel.com",
+    password: "123456",
+    color: "from-violet-500 to-purple-600",
+    bgColor: "bg-violet-50 dark:bg-violet-950/20",
+    borderColor: "border-violet-200 dark:border-violet-800",
+    textColor: "text-violet-700 dark:text-violet-300",
+    permissions: [
+      "Acesso total ao sistema",
+      "Gerenciar profissionais e equipe",
+      "Controle financeiro completo",
+      "Gerenciar pacientes e consultas",
+    ],
+    restrictions: []
+  },
+  {
+    role: "receptionist" as const,
+    label: "Recepcionista",
+    icon: User,
+    email: "ana@vidasaudavel.com",
+    password: "123456",
+    color: "from-blue-500 to-cyan-600",
+    bgColor: "bg-blue-50 dark:bg-blue-950/20",
+    borderColor: "border-blue-200 dark:border-blue-800",
+    textColor: "text-blue-700 dark:text-blue-300",
+    permissions: [
+      "Agendar e gerenciar consultas",
+      "Cadastrar e editar pacientes",
+      "Visualizar profissionais",
+      "Acesso ao financeiro",
+    ],
+    restrictions: [
+      "Não pode editar profissionais",
+      "Não pode excluir pacientes",
+      "Sem acesso às observações médicas",
+    ]
+  },
+  {
+    role: "doctor" as const,
+    label: "Médico",
+    icon: Stethoscope,
+    email: "silva@vidasaudavel.com",
+    password: "123456",
+    color: "from-emerald-500 to-green-600",
+    bgColor: "bg-emerald-50 dark:bg-emerald-950/20",
+    borderColor: "border-emerald-200 dark:border-emerald-800",
+    textColor: "text-emerald-700 dark:text-emerald-300",
+    permissions: [
+      "Vê apenas seus pacientes",
+      "Observações de consulta exclusivas",
+      "Sua agenda pessoal",
+      "Anotações privadas por paciente",
+    ],
+    restrictions: [
+      "Sem acesso ao financeiro",
+      "Sem acesso a profissionais",
+      "Não pode editar dados do paciente",
+    ]
+  }
+];
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedDemoProfile, setSelectedDemoProfile] = useState<number | null>(null);
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,14 +94,11 @@ export default function Login() {
 
   const from = location.state?.from?.pathname || "/dashboard";
 
-  const handleDemoFill = (role: "admin" | "receptionist" | "doctor") => {
-    const credentials = {
-      admin: { email: "admin@vidasaudavel.com", password: "123456" },
-      receptionist: { email: "ana@vidasaudavel.com", password: "123456" },
-      doctor: { email: "silva@vidasaudavel.com", password: "123456" },
-    };
-    setEmail(credentials[role].email);
-    setPassword(credentials[role].password);
+  const handleDemoSelect = (index: number) => {
+    const profile = demoProfiles[index];
+    setEmail(profile.email);
+    setPassword(profile.password);
+    setSelectedDemoProfile(index);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,39 +148,54 @@ export default function Login() {
                 {isDemo ? "Acesso Demo" : "Bem-vindo de volta"}
               </h1>
               <p className="text-muted-foreground mt-1">
-                {isDemo ? "Selecione um perfil para testar o sistema" : "Entre para acessar sua conta"}
+                {isDemo ? "Selecione um perfil para explorar o sistema" : "Entre para acessar sua conta"}
               </p>
             </div>
 
+            {/* Demo Profile Selector */}
             {isDemo && (
-              <div className="mb-6 flex flex-col sm:flex-row gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoFill("admin")}
-                  className="flex-1"
-                >
-                  Admin
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoFill("receptionist")}
-                  className="flex-1"
-                >
-                  Recepcionista
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoFill("doctor")}
-                  className="flex-1"
-                >
-                  Médico
-                </Button>
+              <div className="mb-6 space-y-3">
+                {demoProfiles.map((profile, index) => {
+                  const Icon = profile.icon;
+                  const isSelected = selectedDemoProfile === index;
+                  return (
+                    <button
+                      key={profile.role}
+                      type="button"
+                      onClick={() => handleDemoSelect(index)}
+                      className={`w-full text-left rounded-xl border-2 p-4 transition-all duration-300 ${isSelected
+                          ? `${profile.borderColor} ${profile.bgColor} shadow-md scale-[1.02]`
+                          : 'border-border hover:border-muted-foreground/30 hover:bg-muted/50'
+                        }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${profile.color} flex items-center justify-center text-white shrink-0`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-foreground">{profile.label}</p>
+                            {isSelected && <CheckCircle2 className={`w-4 h-4 ${profile.textColor}`} />}
+                          </div>
+                          <div className="mt-2 grid grid-cols-1 gap-1">
+                            {profile.permissions.map((perm, i) => (
+                              <div key={i} className="flex items-center gap-1.5 text-xs">
+                                <CheckCircle2 className="w-3 h-3 text-green-500 shrink-0" />
+                                <span className="text-muted-foreground">{perm}</span>
+                              </div>
+                            ))}
+                            {profile.restrictions.map((rest, i) => (
+                              <div key={i} className="flex items-center gap-1.5 text-xs">
+                                <X className="w-3 h-3 text-red-400 shrink-0" />
+                                <span className="text-muted-foreground/70">{rest}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
 
@@ -176,18 +254,18 @@ export default function Login() {
                 className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? "Entrando..." : "Entrar"}
+                {isLoading ? "Entrando..." : isDemo && selectedDemoProfile !== null ? `Entrar como ${demoProfiles[selectedDemoProfile].label}` : "Entrar"}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Não tem uma conta?{" "}
+                Quer ter um sistema como este?{" "}
                 <Link
-                  to="/cadastro"
+                  to="/contato"
                   className="font-medium text-primary hover:underline"
                 >
-                  Cadastre-se grátis
+                  Entre em contato
                 </Link>
               </p>
             </div>
@@ -216,10 +294,13 @@ export default function Login() {
             </div>
           </div>
           <h2 className="text-3xl font-display font-bold mb-4">
-            Gerencie sua clínica com eficiência
+            {isDemo ? "Explore cada perfil" : "Gerencie sua clínica com eficiência"}
           </h2>
           <p className="text-primary-foreground/80 text-lg">
-            Simplifique agendamentos, prontuários e finanças em uma única plataforma intuitiva.
+            {isDemo
+              ? "Cada nível de acesso tem funcionalidades e restrições diferentes. Selecione um perfil à esquerda para experimentar."
+              : "Simplifique agendamentos, prontuários e finanças em uma única plataforma intuitiva."
+            }
           </p>
         </div>
       </div>

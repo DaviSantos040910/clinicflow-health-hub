@@ -20,6 +20,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface DashboardStat {
   label: string;
@@ -134,12 +136,16 @@ export default function Dashboard() {
       ]);
 
       if (upcoming) {
-        setUpcomingAppointments(upcoming.map(apt => ({
-          time: new Date(apt.date_time).toTimeString().substring(0, 5),
-          patient: apt.patient?.name || "Paciente",
-          type: "Consulta", // Generic
-          status: apt.status
-        })));
+        setUpcomingAppointments(upcoming.map(apt => {
+          const dateObj = new Date(apt.date_time);
+          return {
+            time: dateObj.toTimeString().substring(0, 5),
+            date: format(dateObj, "dd/MM (EEE)", { locale: ptBR }),
+            patient: apt.patient?.name || "Paciente",
+            type: "Consulta",
+            status: apt.status
+          };
+        }));
       }
 
     } catch (error) {
@@ -307,6 +313,7 @@ export default function Dashboard() {
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-foreground">{appointment.time}</p>
+                      <p className="text-xs text-muted-foreground mb-1">{appointment.date}</p>
                       <span className={`text-xs px-2 py-1 rounded-full ${appointment.status === "confirmado"
                         ? "bg-green-100 text-green-700"
                         : "bg-amber-100 text-amber-700"
