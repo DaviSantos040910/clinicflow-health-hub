@@ -86,7 +86,7 @@ export default function LandingPage() {
               Criar Conta Grátis
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button size="lg" variant="outline" className="h-14 px-8 text-lg w-full sm:w-auto" onClick={() => setIsFindClinicOpen(true)}>
+            <Button size="lg" variant="outline" className="h-14 px-8 text-lg w-full sm:w-auto" onClick={() => navigate("/login?demo=true")}>
               Acessar Demo
             </Button>
           </div>

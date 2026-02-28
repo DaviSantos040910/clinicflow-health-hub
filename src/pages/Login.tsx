@@ -23,7 +23,20 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const searchParams = new URLSearchParams(location.search);
+  const isDemo = searchParams.get("demo") === "true";
+
   const from = location.state?.from?.pathname || "/dashboard";
+
+  const handleDemoFill = (role: "admin" | "receptionist" | "doctor") => {
+    const credentials = {
+      admin: { email: "admin@vidasaudavel.com", password: "123456" },
+      receptionist: { email: "ana@vidasaudavel.com", password: "123456" },
+      doctor: { email: "silva@vidasaudavel.com", password: "123456" },
+    };
+    setEmail(credentials[role].email);
+    setPassword(credentials[role].password);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,12 +82,44 @@ export default function Login() {
           <div className="glass-card p-8">
             <div className="mb-6">
               <h1 className="text-2xl font-display font-bold text-foreground">
-                Bem-vindo de volta
+                {isDemo ? "Acesso Demo" : "Bem-vindo de volta"}
               </h1>
               <p className="text-muted-foreground mt-1">
-                Entre para acessar sua conta
+                {isDemo ? "Selecione um perfil para testar o sistema" : "Entre para acessar sua conta"}
               </p>
             </div>
+
+            {isDemo && (
+              <div className="mb-6 flex flex-col sm:flex-row gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDemoFill("admin")}
+                  className="flex-1"
+                >
+                  Admin
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDemoFill("receptionist")}
+                  className="flex-1"
+                >
+                  Recepcionista
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDemoFill("doctor")}
+                  className="flex-1"
+                >
+                  Médico
+                </Button>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
