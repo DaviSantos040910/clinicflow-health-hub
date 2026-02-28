@@ -4,7 +4,7 @@
 
 **ClinicFlow** é uma plataforma SaaS completa para gestão de clínicas médicas e consultórios, desenvolvida com arquitetura moderna, controle de acesso granular por nível de usuário (RBAC), integração com pagamentos, disparo automatizado de e-mails e configuração de chatbot via WhatsApp.
 
-O sistema permite que administradores, recepcionistas e médicos utilizem a mesma plataforma com funcionalidades e restrições específicas para cada perfil, garantindo segurança e praticidade no dia a dia clínico.
+O sistema permite que administradores, recepcionistas, financeiros e médicos utilizem a mesma plataforma com funcionalidades e restrições específicas para cada perfil, garantindo segurança e praticidade no dia a dia clínico.
 
 **🔗 Link do projeto em produção:** *(inserir URL do Railway aqui)*
 **🔗 Repositório GitHub:** [github.com/DaviSantos040910/clinicflow-health-hub](https://github.com/DaviSantos040910/clinicflow-health-hub)
@@ -70,22 +70,28 @@ O sistema permite que administradores, recepcionistas e médicos utilizem a mesm
 
 ## 🔐 Sistema de Permissões (RBAC)
 
-O sistema implementa **Role-Based Access Control** com 3 níveis de acesso:
+O sistema implementa **Role-Based Access Control** com 4 níveis de acesso:
 
-| Funcionalidade | Admin | Recepcionista | Médico |
-|---|:---:|:---:|:---:|
-| Dashboard completo | ✅ | ✅ | ✅ (apenas seus dados) |
-| Agenda — ver todas | ✅ | ✅ | ❌ (apenas suas consultas) |
-| Agenda — criar para qualquer médico | ✅ | ✅ | ❌ (apenas para si) |
-| Pacientes — ver todos | ✅ | ✅ | ❌ (apenas os seus) |
-| Pacientes — cadastrar/editar | ✅ | ✅ | ❌ |
-| Pacientes — excluir | ✅ | ❌ | ❌ |
-| Observações de consulta (exclusivo) | ❌ | ❌ | ✅ |
-| Profissionais — visualizar | ✅ | ✅ | ❌ |
-| Profissionais — editar | ✅ | ❌ | ❌ |
-| Financeiro | ✅ | ✅ | ❌ |
-| Confirmar pagamento de paciente | ✅ | ✅ | ❌ |
-| Configurações de WhatsApp | ✅ | ✅ | ❌ |
+| Funcionalidade | Admin | Recepcionista | Financeiro | Médico |
+|---|:---:|:---:|:---:|:---:|
+| Dashboard completo | ✅ | ✅ | ✅ | ✅ (apenas seus dados) |
+| Dashboard — Receita mensal | ✅ | ❌ | ✅ | ❌ |
+| Dashboard — Botões rápidos (Novo agendamento, Novo paciente) | ✅ | ✅ | ✅ | ❌ |
+| Dashboard — Relatórios | ✅ | ❌ | ✅ | ❌ |
+| Dashboard — Clicar em paciente abre detalhes | ✅ | ✅ | ✅ | ✅ (com obs. exclusivas) |
+| Agenda — ver todas | ✅ | ✅ | ✅ | ❌ (apenas suas consultas) |
+| Agenda — criar para qualquer médico | ✅ | ✅ | ✅ | ❌ (apenas para si) |
+| Pacientes — ver todos | ✅ | ✅ | ✅ | ❌ (apenas os seus) |
+| Pacientes — cadastrar/editar | ✅ | ✅ | ✅ | ❌ |
+| Pacientes — excluir | ✅ | ❌ | ❌ | ❌ |
+| Observações de consulta (exclusivo) | ❌ | ❌ | ❌ | ✅ |
+| Profissionais — visualizar | ✅ | ✅ | ✅ | ❌ |
+| Profissionais — editar | ✅ | ❌ | ❌ | ❌ |
+| Financeiro completo | ✅ | ✅ | ✅ | ❌ |
+| Confirmar pagamento de paciente | ✅ | ✅ | ✅ | ❌ |
+| Configurações de WhatsApp | ✅ | ✅ | ✅ | ❌ |
+
+> **Financeiro** = mesmos acessos do Recepcionista + visibilidade da receita mensal e relatórios (nível Admin no módulo financeiro).
 
 ### Implementação técnica:
 - **Frontend:** Componente `<ProtectedRoute>` com prop `allowedRoles` que redireciona para `/acesso-negado`
@@ -111,8 +117,10 @@ O sistema implementa **Role-Based Access Control** com 3 níveis de acesso:
 - Redirecionamento pós-login por role
 
 ### 📊 Dashboard
-- Cards de estatísticas: consultas hoje, total do mês, receita, taxa de confirmação
+- Cards de estatísticas: consultas hoje, total do mês, receita (admin/financeiro), taxa de ocupação
+- **Botões de ação rápida:** "Novo agendamento", "Novo paciente" e "Relatórios" com navegação funcional
 - Lista de próximas consultas com **data + horário** formatados em pt-BR
+- **Clicar em um paciente** na lista abre um painel lateral com informações detalhadas, histórico e observações (conforme o nível de acesso)
 - Botão "Ver todas" navegando para `/agenda`
 - Conteúdo adaptado por nível de acesso
 
@@ -137,14 +145,14 @@ O sistema implementa **Role-Based Access Control** com 3 níveis de acesso:
 - CRUD completo de profissionais com agenda semanal configurável
 - Especialidade, CRM, contato
 - Médico: **não tem acesso** a esta aba
-- Recepcionista: **visualiza** mas não edita
+- Recepcionista/Financeiro: **visualiza** mas não edita
 - Admin: acesso total
 
 ### 💰 Financeiro
 - Visão geral de receitas, despesas e saldo
 - Gráficos e métricas financeiras
 - Geração de links de pagamento (integração Stripe)
-- Acessível para admin e recepcionista
+- Acessível para admin, recepcionista e financeiro
 
 ### 📞 Página de Contato
 - Formulário de contato (nome, email, mensagem)
@@ -165,7 +173,7 @@ O sistema implementa **Role-Based Access Control** com 3 níveis de acesso:
 | Tabela | Descrição |
 |---|---|
 | `organizations` | Clínicas/consultórios cadastrados (multi-tenancy) |
-| `profiles` | Perfis de usuário com role (admin, recepcionista, profissional) |
+| `profiles` | Perfis de usuário com role (admin, recepcionista, financeiro, profissional) |
 | `professionals` | Profissionais da clínica com especialidade e agenda |
 | `patients` | Pacientes com dados pessoais e observações |
 | `appointments` | Agendamentos vinculando paciente + profissional + data/hora |
@@ -246,7 +254,7 @@ clinicflow-health-hub/
 
 ## 🎯 Destaques Técnicos para Recrutadores
 
-1. **RBAC completo** — Implementação de controle de acesso em 3 camadas: rota, componente e banco de dados
+1. **RBAC completo (4 níveis)** — Implementação de controle de acesso em 3 camadas: rota, componente e banco de dados, com 4 perfis distintos (Admin, Recepcionista, Financeiro, Médico)
 2. **Multi-tenancy** — Arquitetura preparada para múltiplas clínicas isoladas
 3. **Integração Stripe** — Checkout, webhooks e gestão de assinaturas
 4. **Serverless Functions** — 5 Edge Functions em Deno para lógica de negócio
