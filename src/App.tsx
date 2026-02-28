@@ -66,7 +66,7 @@ const App = () => (
                 path="/financeiro"
                 element={
                   // Updated roles to match new DB schema + added 'owner'
-                  <ProtectedRoute allowedRoles={['admin']}>
+                  <ProtectedRoute allowedRoles={['admin', 'recepcionista']}>
                     <Financeiro />
                   </ProtectedRoute>
                 }

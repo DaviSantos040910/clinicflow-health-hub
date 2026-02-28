@@ -52,7 +52,7 @@ export function Header() {
                   <Link to="/profissionais">Profissionais</Link>
                 </Button>
               )}
-              {role === 'admin' && (
+              {(role === 'admin' || role === 'recepcionista') && (
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/financeiro">Financeiro</Link>
                 </Button>
@@ -126,7 +126,7 @@ export function Header() {
                     <Link to="/profissionais">Profissionais</Link>
                   </Button>
                 )}
-                {role === 'admin' && (
+                {(role === 'admin' || role === 'recepcionista') && (
                   <Button variant="ghost" asChild className="justify-start">
                     <Link to="/financeiro">Financeiro</Link>
                   </Button>

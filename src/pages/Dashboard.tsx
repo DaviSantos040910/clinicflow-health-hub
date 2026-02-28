@@ -113,18 +113,17 @@ export default function Dashboard() {
         .gte("date_time", startOfMonth)
         .lt("date_time", nextMonth);
 
-      // Fetch Upcoming Appointments (limit 5)
-      // Note: We might not have the foreign key for professionals yet,
-      // so we'll fetch basic data and patients for now to avoid join errors
+      // Fetch Upcoming Appointments (limit 8)
+      const todayStart = `${today}T00:00:00`;
       const { data: upcoming } = await supabase
         .from("appointments")
         .select(`
                 *,
                 patient:patients(name)
             `)
-        .gte("date_time", new Date().toISOString())
+        .gte("date_time", todayStart)
         .order("date_time", { ascending: true })
-        .limit(4);
+        .limit(8);
 
       // Update State
       setStats(prev => [
