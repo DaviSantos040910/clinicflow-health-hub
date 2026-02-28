@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, Menu, X, Shield, User, Stethoscope } from "lucide-react";
+import { LogOut, Menu, X, Shield, User, Stethoscope, DollarSign } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 
@@ -10,12 +10,14 @@ const roleIcons = {
   admin: Shield,
   recepcionista: User,
   profissional: Stethoscope,
+  financeiro: DollarSign,
 };
 
 const roleLabels = {
   admin: "Admin",
   recepcionista: "Recepcionista",
   profissional: "Profissional",
+  financeiro: "Financeiro",
 };
 
 export function Header() {
@@ -52,7 +54,7 @@ export function Header() {
                   <Link to="/profissionais">Profissionais</Link>
                 </Button>
               )}
-              {(role === 'admin' || role === 'recepcionista') && (
+              {(role === 'admin' || role === 'recepcionista' || role === 'financeiro') && (
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/financeiro">Financeiro</Link>
                 </Button>
@@ -126,7 +128,7 @@ export function Header() {
                     <Link to="/profissionais">Profissionais</Link>
                   </Button>
                 )}
-                {(role === 'admin' || role === 'recepcionista') && (
+                {(role === 'admin' || role === 'recepcionista' || role === 'financeiro') && (
                   <Button variant="ghost" asChild className="justify-start">
                     <Link to="/financeiro">Financeiro</Link>
                   </Button>

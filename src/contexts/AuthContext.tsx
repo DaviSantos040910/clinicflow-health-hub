@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { OrganizationRole } from "@/types/organization";
 
-export type AppRole = "admin" | "recepcionista" | "profissional";
+export type AppRole = "admin" | "recepcionista" | "profissional" | "financeiro";
 
 interface Profile {
   id: string;
@@ -117,9 +117,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (
-    email: string, 
-    password: string, 
-    fullName: string, 
+    email: string,
+    password: string,
+    fullName: string,
     role: AppRole = "profissional"
   ) => {
     const redirectUrl = `${window.location.origin}/`;

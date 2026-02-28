@@ -72,7 +72,7 @@ export default function Pacientes() {
     const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
     const { role, user } = useAuth();
 
-    const canEdit = role === 'admin' || role === 'recepcionista';
+    const canEdit = role === 'admin' || role === 'recepcionista' || role === 'financeiro';
     const isDoctor = role === 'profissional';
 
     // History Sheet State

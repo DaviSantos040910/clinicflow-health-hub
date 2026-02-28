@@ -67,7 +67,7 @@ const App = () => (
                 path="/financeiro"
                 element={
                   // Updated roles to match new DB schema + added 'owner'
-                  <ProtectedRoute allowedRoles={['admin', 'recepcionista']}>
+                  <ProtectedRoute allowedRoles={['admin', 'recepcionista', 'financeiro']}>
                     <Financeiro />
                   </ProtectedRoute>
                 }
@@ -91,7 +91,7 @@ const App = () => (
               <Route
                 path="/profissionais"
                 element={
-                  <ProtectedRoute allowedRoles={['admin', 'recepcionista']}>
+                  <ProtectedRoute allowedRoles={['admin', 'recepcionista', 'financeiro']}>
                     <Profissionais />
                   </ProtectedRoute>
                 }
@@ -112,7 +112,7 @@ const App = () => (
                 path="/portal/:slug/configuracoes/whatsapp"
                 element={
                   // Updated roles to match new DB schema + added 'owner'
-                  <ProtectedRoute allowedRoles={['admin', 'recepcionista']}>
+                  <ProtectedRoute allowedRoles={['admin', 'recepcionista', 'financeiro']}>
                     <WhatsappConfigPage />
                   </ProtectedRoute>
                 }
