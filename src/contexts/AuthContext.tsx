@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
+import { OrganizationRole } from "@/types/organization";
 
 export type AppRole = "admin" | "recepcionista" | "profissional";
 
@@ -9,6 +10,9 @@ interface Profile {
   full_name: string;
   email: string;
   avatar_url: string | null;
+  organization_id: string | null;
+  role: OrganizationRole | null;
+  is_super_admin?: boolean;
 }
 
 interface AuthContextType {
@@ -91,10 +95,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
+      if (session) {
+        setSession(session);
+        setUser(session.user);
         fetchProfile(session.user.id);
       }
 

@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      organizations: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          logo_url: string | null
+          primary_color: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          logo_url?: string | null
+          primary_color?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -22,6 +49,8 @@ export type Database = {
           full_name: string
           id: string
           updated_at: string
+          organization_id: string | null
+          role: Database["public"]["Enums"]["organization_role"] | null
         }
         Insert: {
           avatar_url?: string | null
@@ -30,6 +59,8 @@ export type Database = {
           full_name: string
           id: string
           updated_at?: string
+          organization_id?: string | null
+          role?: Database["public"]["Enums"]["organization_role"] | null
         }
         Update: {
           avatar_url?: string | null
@@ -38,8 +69,149 @@ export type Database = {
           full_name?: string
           id?: string
           updated_at?: string
+          organization_id?: string | null
+          role?: Database["public"]["Enums"]["organization_role"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      professionals: {
+        Row: {
+          id: string
+          created_at: string
+          name: string
+          specialty: string
+          registration_number: string | null
+          consultation_fee: number | null
+          schedule: Json | null
+          user_id: string | null
+          organization_id: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          name: string
+          specialty: string
+          registration_number?: string | null
+          consultation_fee?: number | null
+          schedule?: Json | null
+          user_id?: string | null
+          organization_id?: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          name?: string
+          specialty?: string
+          registration_number?: string | null
+          consultation_fee?: number | null
+          schedule?: Json | null
+          user_id?: string | null
+          organization_id?: string
+        }
+        Relationships: [
+           {
+            foreignKeyName: "professionals_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      patients: {
+        Row: {
+          id: string
+          created_at: string
+          name: string
+          phone: string | null
+          email: string | null
+          birth_date: string | null
+          observations: string | null
+          user_id: string
+          organization_id: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          name: string
+          phone?: string | null
+          email?: string | null
+          birth_date?: string | null
+          observations?: string | null
+          user_id?: string
+          organization_id?: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          name?: string
+          phone?: string | null
+          email?: string | null
+          birth_date?: string | null
+          observations?: string | null
+          user_id?: string
+          organization_id?: string
+        }
+        Relationships: [
+           {
+            foreignKeyName: "patients_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      appointments: {
+        Row: {
+          id: string
+          created_at: string
+          patient_id: string
+          date_time: string
+          status: string
+          notes: string | null
+          professional_id: string | null
+          organization_id: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          patient_id: string
+          date_time: string
+          status: string
+          notes?: string | null
+          professional_id?: string | null
+          organization_id?: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          patient_id?: string
+          date_time?: string
+          status?: string
+          notes?: string | null
+          professional_id?: string | null
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       user_roles: {
         Row: {
@@ -62,6 +234,79 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_bills: {
+        Row: {
+          id: string
+          organization_id: string
+          patient_id: string
+          appointment_id: string | null
+          amount: number
+          status: 'pending' | 'paid' | 'canceled' | 'refunded'
+          description: string | null
+          payment_method: string | null
+          payment_link_url: string | null
+          external_reference_id: string | null
+          due_date: string | null
+          paid_at: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id?: string
+          patient_id: string
+          appointment_id?: string | null
+          amount: number
+          status?: 'pending' | 'paid' | 'canceled' | 'refunded'
+          description?: string | null
+          payment_method?: string | null
+          payment_link_url?: string | null
+          external_reference_id?: string | null
+          due_date?: string | null
+          paid_at?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          patient_id?: string
+          appointment_id?: string | null
+          amount?: number
+          status?: 'pending' | 'paid' | 'canceled' | 'refunded'
+          description?: string | null
+          payment_method?: string | null
+          payment_link_url?: string | null
+          external_reference_id?: string | null
+          due_date?: string | null
+          paid_at?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_bills_patient_id_fkey"
+            columns: ["patient_id"]
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_bills_appointment_id_fkey"
+            columns: ["appointment_id"]
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_bills_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -81,6 +326,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "recepcionista" | "profissional"
+      organization_role: "owner" | "admin" | "doctor" | "receptionist"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -209,6 +455,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "recepcionista", "profissional"],
+      organization_role: ["owner", "admin", "doctor", "receptionist"],
     },
   },
 } as const
