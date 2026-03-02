@@ -77,11 +77,8 @@ export function Header() {
             </>
           ) : (
             <>
-              <Button variant="ghost" asChild>
-                <Link to="/login">Entrar</Link>
-              </Button>
               <Button variant="gradient" asChild>
-                <Link to="/contato">Entrar em Contato</Link>
+                <Link to="/login?demo=true">Ver Demo</Link>
               </Button>
             </>
           )}
@@ -140,11 +137,8 @@ export function Header() {
               </>
             ) : (
               <>
-                <Button variant="ghost" asChild className="justify-start">
-                  <Link to="/login">Entrar</Link>
-                </Button>
-                <Button variant="gradient" asChild>
-                  <Link to="/contato">Entrar em Contato</Link>
+                <Button variant="gradient" asChild className="justify-start">
+                  <Link to="/login?demo=true">Ver Demo</Link>
                 </Button>
               </>
             )}

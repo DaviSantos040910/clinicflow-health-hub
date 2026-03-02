@@ -25,7 +25,7 @@ export function Logo({ size = "md", showText = true }: LogoProps) {
       </div>
       {showText && (
         <span className={`font-display font-bold ${textClasses[size]} text-foreground`}>
-          Clinic<span className="text-gradient">Flow</span>
+          Service<span className="text-gradient">Flow</span>
         </span>
       )}
     </div>

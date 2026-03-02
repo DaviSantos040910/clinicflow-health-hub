@@ -14,7 +14,7 @@ export default function Contato() {
     const [isLoading, setIsLoading] = useState(false);
 
     const whatsappNumber = "5589981013110";
-    const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Olá! Tenho interesse no ClinicFlow. Gostaria de saber mais sobre os planos.")}`;
+    const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Olá! Tenho interesse no ServiceFlow. Gostaria de saber mais sobre os planos.")}`;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

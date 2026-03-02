@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FindClinicDialog } from "@/components/landing/FindClinicDialog";
+
 import {
   CheckCircle2,
   Calendar,
@@ -28,7 +28,7 @@ import {
 
 const whatsappNumber = "5589981013110";
 const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-  "Olá! Tenho interesse no ClinicFlow. Gostaria de saber mais sobre adaptação para o meu negócio."
+  "Olá! Tenho interesse no ServiceFlow. Gostaria de saber mais sobre adaptação para o meu negócio."
 )}`;
 
 /* ─── Intersection Observer Hook ─── */
@@ -55,7 +55,6 @@ function useInView(threshold = 0.15) {
 
 /* ═══════════════════════════════════════════════════════ */
 export default function LandingPage() {
-  const [isFindClinicOpen, setIsFindClinicOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
 
@@ -70,8 +69,8 @@ export default function LandingPage() {
       {/* ─── Header ─── */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-            ? "bg-white/80 backdrop-blur-md shadow-sm border-b py-3"
-            : "bg-transparent py-5"
+          ? "bg-white/80 backdrop-blur-md shadow-sm border-b py-3"
+          : "bg-transparent py-5"
           }`}
       >
         <div className="container flex items-center justify-between">
@@ -90,7 +89,7 @@ export default function LandingPage() {
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
             </div>
-            ClinicFlow
+            ServiceFlow
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
@@ -110,17 +109,10 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-3">
             <Button
-              variant="ghost"
-              onClick={() => setIsFindClinicOpen(true)}
-              className="text-slate-600 hidden sm:inline-flex"
-            >
-              Já sou cliente
-            </Button>
-            <Button
               onClick={() => navigate("/login?demo=true")}
               className="shadow-lg shadow-primary/20"
             >
-              Entrar / Criar Conta
+              Ver Demo
             </Button>
           </div>
         </div>
@@ -170,14 +162,6 @@ export default function LandingPage() {
               Ver Demonstração
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 px-8 text-lg w-full sm:w-auto"
-              onClick={() => navigate("/login")}
-            >
-              Entrar / Criar Conta
-            </Button>
           </div>
         </div>
       </section>
@@ -218,10 +202,10 @@ export default function LandingPage() {
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
             </div>
-            ClinicFlow
+            ServiceFlow
           </div>
           <p className="text-sm">
-            © {new Date().getFullYear()} ClinicFlow — Plataforma de Gestão para
+            © {new Date().getFullYear()} ServiceFlow — Plataforma de Gestão para
             Pequenos Negócios.
           </p>
           <div className="flex gap-6 text-sm">
@@ -235,10 +219,6 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      <FindClinicDialog
-        isOpen={isFindClinicOpen}
-        onClose={() => setIsFindClinicOpen(false)}
-      />
     </div>
   );
 }
@@ -294,7 +274,7 @@ function SegmentsSection() {
       <div className="container max-w-5xl mx-auto">
         <div className="text-center mb-14">
           <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-            Para quem é o ClinicFlow?
+            Para quem é o ServiceFlow?
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Construímos uma base sólida que pode ser{" "}
@@ -379,7 +359,7 @@ function BenefitsSection() {
       <div className="container max-w-6xl mx-auto">
         <div className="text-center mb-14">
           <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-            O que você resolve com ClinicFlow
+            O que você resolve com ServiceFlow
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Organize clientes, agenda, serviços e operações — tudo em um sistema

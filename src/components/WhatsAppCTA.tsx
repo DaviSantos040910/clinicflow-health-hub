@@ -1,7 +1,7 @@
 import { MessageSquare } from "lucide-react";
 
 const whatsappNumber = "5589981013110";
-const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Olá! Gostaria de saber mais sobre o ClinicFlow.")}`;
+const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Olá! Gostaria de saber mais sobre o ServiceFlow.")}`;
 
 export function WhatsAppCTA() {
     return (
