@@ -298,10 +298,10 @@ function SegmentsSection() {
                 </span>
               )}
               <div
-                className={`w-14 h-14 rounded-xl bg-current/10 flex items-center justify-center ${s.color} group-hover:scale-110 transition-transform`}
-                style={{ backgroundColor: "currentColor", opacity: 0.1 }}
+                className={`relative w-14 h-14 rounded-xl flex items-center justify-center ${s.color} group-hover:scale-110 transition-transform`}
               >
-                <s.icon className={`w-7 h-7 ${s.color} relative z-10`} style={{ opacity: 1 }} />
+                <div className="absolute inset-0 bg-current opacity-10 rounded-xl" />
+                <s.icon className="w-7 h-7 relative z-10" />
               </div>
               <span className="font-semibold text-slate-800 text-sm text-center">
                 {s.name}
