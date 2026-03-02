@@ -399,22 +399,22 @@ function HowItWorksSection() {
   const { ref, visible } = useInView();
   const steps = [
     {
-      icon: UserPlus,
+      icon: Sparkles,
       number: "01",
-      title: "Cadastre sua conta",
-      desc: "Crie seu acesso em minutos — sem burocracia.",
+      title: "Explore a demonstração",
+      desc: "Acesse a versão demo e veja o sistema funcionando na prática.",
     },
     {
       icon: Settings,
       number: "02",
-      title: "Configure serviços e agenda",
-      desc: "Adicione profissionais, horários e serviços que seu negócio oferece.",
+      title: "Solicite a adaptação",
+      desc: "Alinhamos os recursos e a identidade visual para o seu negócio.",
     },
     {
       icon: Users,
       number: "03",
-      title: "Gerencie clientes e atendimentos",
-      desc: "Cadastre clientes, agende atendimentos e registre o histórico.",
+      title: "Cadastros centralizados",
+      desc: "Gerencie clientes, profissionais e histórico de forma simples.",
     },
     {
       icon: BarChart3,
