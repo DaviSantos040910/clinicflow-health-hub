@@ -148,7 +148,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Uma plataforma de gestão para pequenos negócios — esta demo está
+            Uma plataforma de gestão feita para o seu negócio — esta demo está
             configurada para <strong>clínica</strong>, mas a base é adaptável
             para qualquer segmento.
           </p>
@@ -206,7 +206,7 @@ export default function LandingPage() {
           </div>
           <p className="text-sm">
             © {new Date().getFullYear()} ServiceFlow — Plataforma de Gestão para
-            Pequenos Negócios.
+            o Seu Negócio.
           </p>
           <div className="flex gap-6 text-sm">
             <Link to="/contato" className="hover:text-white transition-colors">

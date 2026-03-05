@@ -65,7 +65,7 @@ Seu repositório no GitHub deve estar atualizado com o código atual. Use os com
 ### Passo 2: Criar Projeto no Railway
 1. Acesse [Railway.app](https://railway.app), logue com seu GitHub.
 2. Na página inicial, clique em **"New Project"**.
-3. Selecione **"Deploy from GitHub repo"** e procure pelo repositório do seu projeto (ex: `clinicflow-health-hub`).
+3. Selecione **"Deploy from GitHub repo"** e procure pelo repositório do seu projeto (ex: `ServiceFlow`).
 4. Clique na sua nova aplicação e veja que ela vai começar o "Build" (Construção). Deixe estar ou clique para abortar, porque antes precisamos colocar as variáveis do passo 4 anterior.
 
 ### Passo 3: Configurar Variáveis (Coração do Frontend)
@@ -96,7 +96,7 @@ Se você tentar entrar agora, será impedido de logar. Precisamos dizer ao Supab
 
 ## Checklist Rápido Pós-Deploy
 
-- [ ] O domínio público gerado pelo Railway abre a landing page do ClinicFlow?
+- [ ] O domínio público gerado pelo Railway abre a landing page do ServiceFlow?
 - [ ] O botão de acesso leva ao formulário de Login, permitindo o cadastro?
 - [ ] Os webhooks e painéis em `Stripe` ou `MailerSend` estão apontando para o seu novo site e suas novas rotas Supabase na nuvem? (Crucial para emissões e cobranças onlines!)
 - [ ] Está tudo configurado como SSL/HTTPS? Sim! O Railway e Supabase fazem isso sozinhos por você.

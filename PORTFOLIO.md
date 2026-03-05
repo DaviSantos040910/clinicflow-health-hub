@@ -1,13 +1,14 @@
-# ClinicFlow — Sistema de Gestão para Clínicas e Consultórios
+# ServiceFlow — Plataforma de Gestão e Agendamento para o Seu Negócio
 
 ## 📋 Visão Geral
 
-**ClinicFlow** é uma plataforma SaaS completa para gestão de clínicas médicas e consultórios, desenvolvida com arquitetura moderna, controle de acesso granular por nível de usuário (RBAC), integração com pagamentos, disparo automatizado de e-mails e configuração de chatbot via WhatsApp.
+**ServiceFlow** é uma plataforma SaaS completa de gestão e agendamento para o seu negócio, desenvolvida com arquitetura moderna, controle de acesso granular por nível de usuário (RBAC), integração com pagamentos, disparo automatizado de e-mails e configuração de chatbot via WhatsApp. Demo configurada para clínicas — adaptável para salões, academias, consultórios e mais.
 
 O sistema permite que administradores, recepcionistas, financeiros e médicos utilizem a mesma plataforma com funcionalidades e restrições específicas para cada perfil, garantindo segurança e praticidade no dia a dia clínico.
 
-**🔗 Link do projeto em produção:** *(inserir URL do Railway aqui)*
-**🔗 Repositório GitHub:** [github.com/DaviSantos040910/clinicflow-health-hub](https://github.com/DaviSantos040910/clinicflow-health-hub)
+**🔗 Link do projeto em produção:** [serviceflow.up.railway.app](https://serviceflow.up.railway.app/)
+**🔗 Repositório GitHub:** [github.com/DaviSantos040910/ServiceFlow](https://github.com/DaviSantos040910/ServiceFlow)
+**🌐 Live Demo:** [serviceflow.up.railway.app](https://serviceflow.up.railway.app/)
 
 ---
 
@@ -226,7 +227,7 @@ O sistema implementa **Role-Based Access Control** com 4 níveis de acesso:
 ## 📐 Estrutura do Projeto
 
 ```
-clinicflow-health-hub/
+ServiceFlow/
 ├── src/
 │   ├── components/          # Componentes reutilizáveis
 │   │   ├── ui/              # 49 componentes Shadcn/UI
